@@ -14,7 +14,7 @@ export function setToken(token) {
 // Empty baseURL in dev → requests hit the Vite proxy (/api → localhost:4000).
 // In production VITE_API_URL points at the deployed Express server.
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || '',
+  baseURL: import.meta.env.VITE_API_URL,
   timeout: 20000,
 });
 
