@@ -1,0 +1,58 @@
+    /* ===== LTR / English Mode ===== */
+    html[dir="ltr"] #sidebar {
+      right: auto;
+      left: 0;
+    }
+    html[dir="ltr"] #main {
+      margin-right: 0;
+      margin-left: var(--sidebar-w);
+    }
+    html[dir="ltr"] .nav-item {
+      border-right: none;
+      border-left: 3px solid transparent;
+    }
+    html[dir="ltr"] .nav-item.active {
+      border-left-color: var(--green-400);
+    }
+    html[dir="ltr"] .stat-card {
+      border-right: none;
+      border-left: 4px solid var(--accent-color, var(--green-600));
+    }
+    html[dir="ltr"] .table-actions { justify-content: flex-start; }
+    html[dir="ltr"] .phone-country-code {
+      border-left: none;
+      border-right: 2px solid var(--gray-200);
+    }
+    html[dir="ltr"] th, html[dir="ltr"] td { text-align: left; }
+    html[dir="ltr"] .trail-step::before {
+      right: auto;
+      left: 50%;
+    }
+    html[dir="ltr"] .mini-step::before {
+      right: auto;
+      left: 50%;
+    }
+    html[dir="ltr"] .customer-header { flex-direction: row; }
+    html[dir="ltr"] .sidebar-footer .btn-logout { flex-direction: row; }
+    html[dir="ltr"] select, html[dir="ltr"] input, html[dir="ltr"] textarea {
+      direction: ltr;
+      text-align: left;
+    }
+    html[dir="ltr"] .form-group label { text-align: left; }
+    html[dir="ltr"] .login-tabs { flex-direction: row; }
+    html[dir="ltr"] .toast { flex-direction: row; }
+    html[dir="ltr"] #toast-container { left: auto; right: 24px; }
+    html[dir="ltr"] .modal-header h3 { text-align: left; }
+    html[dir="ltr"] .page-toolbar { flex-direction: row; }
+    html[dir="ltr"] .header-actions { flex-direction: row; }
+    html[dir="ltr"] .card-header { flex-direction: row; }
+    html[dir="ltr"] .total-row { flex-direction: row; }
+    html[dir="ltr"] .mini-trail { flex-direction: row; }
+    html[dir="ltr"] .order-status-trail { flex-direction: row; }
+    html[dir="ltr"] .tabs { flex-direction: row; }
+    html[dir="ltr"] .order-info-grid { direction: ltr; }
+    html[dir="ltr"] .stats-grid { direction: ltr; }
+    html[dir="ltr"] .form-row { direction: ltr; }
+    html[dir="ltr"] .login-card { direction: ltr; text-align: left; }
+    html[dir="ltr"] .demo-users { text-align: left; }
+    html[dir="ltr"] .lang-toggle { direction: ltr; }

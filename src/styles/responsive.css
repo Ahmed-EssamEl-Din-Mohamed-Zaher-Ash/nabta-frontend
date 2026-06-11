@@ -1,0 +1,8 @@
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 768px) {
+      #sidebar { width: 200px; }
+      #main { margin-right: 200px; }
+      .form-row, .form-row-3 { grid-template-columns: 1fr; }
+      .charts-grid { grid-template-columns: 1fr; }
+      .stats-grid { grid-template-columns: 1fr 1fr; }
+    }

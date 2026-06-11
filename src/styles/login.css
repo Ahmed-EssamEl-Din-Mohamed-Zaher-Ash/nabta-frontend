@@ -1,0 +1,139 @@
+    /* ===== LOGIN PAGE ===== */
+    #login-page {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, var(--green-900) 0%, var(--green-700) 50%, var(--green-500) 100%);
+      position: relative;
+      overflow: hidden;
+    }
+    #login-page::before {
+      content: '';
+      position: absolute;
+      width: 600px; height: 600px;
+      border-radius: 50%;
+      background: rgba(255,255,255,.04);
+      top: -200px; right: -200px;
+    }
+    #login-page::after {
+      content: '';
+      position: absolute;
+      width: 400px; height: 400px;
+      border-radius: 50%;
+      background: rgba(255,255,255,.04);
+      bottom: -100px; left: -100px;
+    }
+    .login-card {
+      background: var(--white);
+      border-radius: 20px;
+      padding: 48px;
+      width: 420px;
+      box-shadow: var(--shadow-lg);
+      position: relative;
+      z-index: 1;
+    }
+    .login-logo {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+    .login-logo .brand-logo {
+      width: 64px;
+      height: 64px;
+    }
+    .login-logo svg { width: 80px; height: 80px; }
+    .login-logo h1 {
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--green-600);
+      margin-top: 12px;
+    }
+    .login-logo p { color: var(--gray-500); font-size: 13px; }
+    .form-group { margin-bottom: 20px; }
+    .form-group label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: var(--gray-700);
+      font-size: 13px;
+    }
+    .form-group input, .form-group select, .form-group textarea {
+      width: 100%;
+      padding: 12px 16px;
+      border: 2px solid var(--gray-200);
+      border-radius: var(--radius-sm);
+      font-family: 'Tajawal', sans-serif;
+      font-size: 14px;
+      color: var(--gray-900);
+      transition: border-color .2s;
+      background: var(--white);
+      direction: rtl;
+    }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+      outline: none;
+      border-color: var(--green-500);
+      box-shadow: 0 0 0 3px var(--green-100);
+    }
+    .form-group textarea { resize: vertical; min-height: 80px; }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-family: 'Tajawal', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all .2s;
+      text-decoration: none;
+    }
+    .btn-primary {
+      background: var(--green-600);
+      color: var(--white);
+    }
+    .btn-primary:hover { background: var(--green-700); transform: translateY(-1px); }
+    .btn-secondary {
+      background: var(--gray-100);
+      color: var(--gray-700);
+      border: 1px solid var(--gray-200);
+    }
+    .btn-secondary:hover { background: var(--gray-200); }
+    .btn-danger { background: var(--red); color: var(--white); }
+    .btn-danger:hover { background: #DC2626; }
+    .btn-warning { background: var(--orange); color: var(--white); }
+    .btn-warning:hover { background: #EA580C; }
+    .btn-info { background: var(--blue); color: var(--white); }
+    .btn-info:hover { background: #2563EB; }
+    .btn-sm { padding: 6px 14px; font-size: 12px; }
+    .btn-full { width: 100%; justify-content: center; }
+    .btn-lg { padding: 14px 28px; font-size: 16px; }
+    .login-error {
+      background: var(--red-light);
+      color: var(--red);
+      padding: 10px 16px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      margin-bottom: 16px;
+      display: none;
+    }
+    .demo-users {
+      margin-top: 24px;
+      padding: 16px;
+      background: var(--gray-50);
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+    }
+    .demo-users strong { display: block; color: var(--gray-600); margin-bottom: 8px; }
+    .demo-users span {
+      display: inline-block;
+      background: var(--green-100);
+      color: var(--green-700);
+      padding: 3px 10px;
+      border-radius: 20px;
+      margin: 3px;
+      cursor: pointer;
+      transition: background .2s;
+    }
+    .demo-users span:hover { background: var(--green-200); }

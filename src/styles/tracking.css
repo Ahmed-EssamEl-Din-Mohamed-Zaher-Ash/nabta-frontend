@@ -1,0 +1,19 @@
+    /* ===== PUBLIC TRACKING ===== */
+    #tracking-page {
+      min-height: 100vh;
+      background: var(--gray-50);
+      display: none;
+      flex-direction: column;
+    }
+    #tracking-page.active { display: flex; }
+    .tracking-header {
+      background: var(--green-800);
+      padding: 20px 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .tracking-header svg { width: 36px; height: 36px; }
+    .tracking-header h1 { font-size: 20px; font-weight: 800; color: var(--white); }
+    .tracking-header p { font-size: 12px; color: rgba(255,255,255,.6); }
+    .tracking-body { flex: 1; padding: 32px 24px; max-width: 600px; margin: 0 auto; width: 100%; }

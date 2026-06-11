@@ -1,0 +1,71 @@
+    /* Language toggle button */
+    .lang-toggle {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border: 1.5px solid var(--gray-200);
+      border-radius: 20px;
+      background: var(--white);
+      font-family: 'Tajawal', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all .2s;
+      color: var(--gray-700);
+    }
+    .lang-toggle:hover {
+      border-color: var(--green-500);
+      color: var(--green-600);
+      background: var(--green-50);
+    }
+    .lang-toggle .lang-flag { font-size: 16px; }
+
+    /* ===== REGISTRATION FORM ===== */
+    .login-view        { display: block; }
+    .login-view.hidden { display: none; }
+    #reg-panel         { display: none; }
+    #reg-panel.active  { display: block; }
+    .reg-back-btn {
+      display: flex; align-items: center; gap: 6px;
+      border: none; background: none; color: var(--gray-400);
+      font-family: 'Tajawal', sans-serif; font-size: 13px;
+      cursor: pointer; padding: 0; margin-bottom: 20px; transition: color .2s;
+    }
+    .reg-back-btn:hover { color: var(--green-600); }
+    .reg-title { font-size: 20px; font-weight: 800; color: var(--gray-900); margin-bottom: 2px; }
+    .reg-subtitle { font-size: 13px; color: var(--gray-400); margin-bottom: 22px; }
+    .reg-link-row { text-align: center; margin-top: 14px; font-size: 13px; color: var(--gray-500); }
+    .reg-link-row a { color: var(--green-600); font-weight: 700; cursor: pointer; text-decoration: none; }
+    .reg-link-row a:hover { text-decoration: underline; }
+    .pass-wrap { position: relative; }
+    .pass-wrap input { padding-left: 40px !important; }
+    html[dir="ltr"] .pass-wrap input { padding-right: 40px !important; padding-left: 14px !important; }
+    .pass-eye {
+      position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+      border: none; background: none; cursor: pointer; font-size: 16px;
+      line-height: 1; color: var(--gray-400); padding: 0; transition: color .15s;
+    }
+    html[dir="ltr"] .pass-eye { left: auto; right: 12px; }
+    .pass-eye:hover { color: var(--green-600); }
+    .pass-strength-bar {
+      height: 4px; background: var(--gray-200);
+      border-radius: 2px; margin-top: 6px; overflow: hidden;
+    }
+    .pass-strength-fill { height: 100%; border-radius: 2px; width: 0; transition: width .35s, background .35s; }
+    .pass-strength-txt { font-size: 11px; font-weight: 700; margin-top: 3px; }
+    .fld-ok  { border-color: var(--green-400) !important; }
+    .fld-err { border-color: var(--red)       !important; }
+    .fld-hint { font-size: 11px; margin-top: 3px; min-height: 14px; }
+    .reg-err-box {
+      background: var(--red-light); color: var(--red);
+      padding: 10px 14px; border-radius: var(--radius-sm);
+      font-size: 13px; margin-bottom: 14px; display: none;
+    }
+    .reg-success-state { text-align: center; padding: 32px 0; display: none; }
+    .reg-success-icon {
+      width: 72px; height: 72px; background: var(--green-100); border-radius: 50%;
+      display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;
+    }
+    .reg-success-icon svg { width: 36px; height: 36px; color: var(--green-600); }
+
