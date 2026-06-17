@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import L from '../utils/leafletSetup.js';
 import api from '../api/client.js';
-import { STATUS_LABELS } from '../constants/permissions.js';
 import { formatCurrency, orderTotals } from '../utils/format.js';
 
 const STATUS_COLORS = {
@@ -11,20 +11,23 @@ const STATUS_COLORS = {
 };
 
 const LEGEND = [
-  { color: '#6366f1', label: 'جديد' },
-  { color: '#f59e0b', label: 'قيد التحضير' },
-  { color: '#3b82f6', label: 'في الطريق' },
-  { color: '#22c55e', label: 'تم التسليم' },
-  { color: '#ef4444', label: 'فشل التسليم' },
+  { color: '#6366f1', status: 'new' },
+  { color: '#f59e0b', status: 'preparing' },
+  { color: '#3b82f6', status: 'out' },
+  { color: '#22c55e', status: 'delivered' },
+  { color: '#ef4444', status: 'failed' },
 ];
 
 const LIVE_POLL_MS = 10_000;
 
 export default function TrackingMapPage() {
+  const { t } = useTranslation();
   const mapElRef = useRef(null);
   const mapRef = useRef(null);
   const liveMarkersRef = useRef({}); // sessionId -> L.marker
   const [orderCount, setOrderCount] = useState(0);
+  const tRef = useRef(t);
+  tRef.current = t;
 
   useEffect(() => {
     let pollTimer = null;
@@ -39,6 +42,7 @@ export default function TrackingMapPage() {
 
     // 1. Static order markers (orders that have a delivery location)
     async function loadOrders() {
+      const tt = tRef.current;
       const { data } = await api.get('/api/orders', { params: { limit: 100 } });
       if (disposed) return;
       const located = data.orders.filter((o) => o.location?.lat);
@@ -57,11 +61,11 @@ export default function TrackingMapPage() {
           .bindPopup(
             `<div style="font-family:Tajawal,sans-serif;min-width:200px;direction:rtl">
               <strong style="font-size:14px">${o.orderNumber}</strong><br>
-              <span style="color:${color};font-weight:700">${STATUS_LABELS[o.status] || o.status}</span><br>
-              <span style="font-size:12px">العميل: ${o.customer?.name || '-'}</span><br>
-              ${o.driver ? `<span style="font-size:12px">السائق: ${o.driver.name}</span><br>` : ''}
-              <span style="font-size:12px">التاريخ: ${o.date}</span><br>
-              <span style="font-size:12px">الإجمالي: ${formatCurrency(orderTotals(o).total)}</span>
+              <span style="color:${color};font-weight:700">${tt(`status.${o.status}`, o.status)}</span><br>
+              <span style="font-size:12px">${tt('common.customer')}: ${o.customer?.name || '-'}</span><br>
+              ${o.driver ? `<span style="font-size:12px">${tt('common.driver')}: ${o.driver.name}</span><br>` : ''}
+              <span style="font-size:12px">${tt('common.date')}: ${o.date}</span><br>
+              <span style="font-size:12px">${tt('common.total')}: ${formatCurrency(orderTotals(o).total)}</span>
             </div>`
           );
       });
@@ -75,6 +79,7 @@ export default function TrackingMapPage() {
     // 2. Live vehicle markers — polled REST instead of the old Supabase realtime
     async function pollLive() {
       try {
+        const tt = tRef.current;
         const { data } = await api.get('/api/tracking/active');
         if (disposed) return;
         data.locations.forEach((loc) => {
@@ -86,10 +91,10 @@ export default function TrackingMapPage() {
             iconAnchor: [19, 15],
           });
           const popup = `<div style="font-family:Tajawal,sans-serif;min-width:180px;direction:rtl">
-            <strong>مركبة مباشرة</strong><br>
-            <span style="font-size:12px">الطلب: ${loc.orderNumber || '-'}</span><br>
-            <span style="font-size:12px">السائق: ${loc.driverName || '-'}</span><br>
-            <span style="font-size:12px">آخر إشارة: ${loc.recordedAt ? new Date(loc.recordedAt).toLocaleTimeString('ar-AE') : '-'}</span>
+            <strong>${tt('tracking.liveVehicle')}</strong><br>
+            <span style="font-size:12px">${tt('tracking.order')}: ${loc.orderNumber || '-'}</span><br>
+            <span style="font-size:12px">${tt('common.driver')}: ${loc.driverName || '-'}</span><br>
+            <span style="font-size:12px">${tt('tracking.lastSignal')}: ${loc.recordedAt ? new Date(loc.recordedAt).toLocaleTimeString('ar-AE') : '-'}</span>
           </div>`;
 
           const existing = liveMarkersRef.current[loc.sessionId];
@@ -124,21 +129,21 @@ export default function TrackingMapPage() {
   return (
     <>
       <div className="page-header">
-        <h2><i className="fa-solid fa-map-location-dot" aria-hidden="true" /> خريطة تتبع الطلبات</h2>
-        <span className="text-muted">{orderCount} طلب على الخريطة</span>
+        <h2><i className="fa-solid fa-map-location-dot" aria-hidden="true" /> {t('tracking.title')}</h2>
+        <span className="text-muted">{t('tracking.countOnMap', { count: orderCount })}</span>
       </div>
       <div className="card" style={{ marginBottom: 16 }}>
         <div className="card-body" style={{ padding: '12px 20px' }}>
           <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'center' }}>
             {LEGEND.map((l) => (
-              <span key={l.label} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}>
+              <span key={l.status} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}>
                 <span style={{ width: 12, height: 12, borderRadius: '50%', background: l.color, display: 'inline-block' }} />
-                {l.label}
+                {t(`status.${l.status}`)}
               </span>
             ))}
             <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}>
               <span style={{ width: 14, height: 12, borderRadius: 3, background: '#16a34a', display: 'inline-block' }} />
-              مركبة مباشرة
+              {t('tracking.liveVehicle')}
             </span>
           </div>
         </div>

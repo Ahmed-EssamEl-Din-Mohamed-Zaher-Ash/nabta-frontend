@@ -1,55 +1,57 @@
+import { useTranslation } from 'react-i18next';
 import CrudPage from '../components/CrudPage.jsx';
 
 // Backend guards: create/update by admin + sales, delete admin-only.
 export default function CustomersPage() {
+  const { t } = useTranslation();
   return (
     <CrudPage
       entity="customers"
       listKey="customers"
-      countLabel={(n) => `${n} عميل`}
-      addLabel="+ إضافة عميل"
-      modalTitles={{ add: 'إضافة عميل جديد', edit: 'تعديل العميل' }}
+      countLabel={(n) => t('customers.count', { count: n })}
+      addLabel={t('customers.add')}
+      modalTitles={{ add: t('customers.addTitle'), edit: t('customers.editTitle') }}
       messages={{
-        added: 'تم إضافة العميل',
-        updated: 'تم تعديل العميل',
-        deleted: 'تم حذف العميل',
-        confirmTitle: 'حذف العميل',
-        confirmText: 'هل تريد حذف هذا العميل؟',
+        added: t('customers.added'),
+        updated: t('customers.updated'),
+        deleted: t('customers.deleted'),
+        confirmTitle: t('customers.confirmTitle'),
+        confirmText: t('customers.confirmText'),
       }}
       editRoles={['admin', 'sales']}
       deleteRoles={['admin']}
       columns={[
-        { header: 'الاسم', render: (c) => <strong>{c.name}</strong> },
-        { header: 'الهاتف', render: (c) => c.phone || '-' },
-        { header: 'البريد', render: (c) => c.email || '-' },
-        { header: 'العنوان', render: (c) => c.address || '-' },
+        { header: t('common.name'), render: (c) => <strong>{c.name}</strong> },
+        { header: t('common.phone'), render: (c) => c.phone || '-' },
+        { header: t('common.email'), render: (c) => c.email || '-' },
+        { header: t('common.address'), render: (c) => c.address || '-' },
         {
-          header: 'الموقع',
+          header: t('common.location'),
           render: (c) =>
             c.location?.lat ? (
               <span style={{ color: 'var(--green-600)' }}>
-                <i className="fa-solid fa-location-dot" aria-hidden="true" /> محدد
+                <i className="fa-solid fa-location-dot" aria-hidden="true" /> {t('common.locationSet')}
               </span>
             ) : (
-              <span className="text-muted">غير محدد</span>
+              <span className="text-muted">{t('common.locationNotSet')}</span>
             ),
         },
       ]}
       fields={[
-        { name: 'name', label: 'الاسم', required: true, half: true },
-        { name: 'phone', label: 'الهاتف', half: true, placeholder: '+971501234567' },
-        { name: 'email', label: 'البريد الإلكتروني', type: 'email', half: true },
+        { name: 'name', label: t('common.name'), required: true, half: true },
+        { name: 'phone', label: t('common.phone'), half: true, placeholder: '+971501234567' },
+        { name: 'email', label: t('common.email'), type: 'email', half: true },
         {
           name: 'preferredLanguage',
-          label: 'لغة المراسلة والفواتير',
+          label: t('common.messagingLang'),
           type: 'select',
           half: true,
           default: 'ar',
-          options: [{ value: 'ar', label: 'العربية' }, { value: 'en', label: 'الإنجليزية' }],
+          options: [{ value: 'ar', label: t('lang.ar') }, { value: 'en', label: t('lang.en') }],
         },
-        { name: 'address', label: 'العنوان' },
-        { name: 'location', label: 'الموقع على الخريطة', type: 'location' },
-        { name: 'notes', label: 'ملاحظات', type: 'textarea' },
+        { name: 'address', label: t('common.address') },
+        { name: 'location', label: t('common.locationOnMap'), type: 'location' },
+        { name: 'notes', label: t('common.notes'), type: 'textarea' },
       ]}
       toPayload={(v) => ({
         name: v.name.trim(),

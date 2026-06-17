@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Chart as ChartJS,
   ArcElement, BarElement, CategoryScale, LinearScale,
@@ -17,6 +18,7 @@ const STATUS_KEYS = Object.keys(STATUS_LABELS);
 const STATUS_COLORS = ['#6366f1', '#22c55e', '#f59e0b', '#8b5cf6', '#3b82f6', '#22c55e', '#ef4444', '#6b7280'];
 
 export default function AnalyticsPage() {
+  const { t } = useTranslation();
   const showToast = useToast();
   const [data, setData] = useState(null);
 
@@ -37,7 +39,7 @@ export default function AnalyticsPage() {
         api.get('/api/products'),
       ]);
       exportAnalyticsExcel(o.data.orders, v.data.vendors, p.data.products);
-      showToast('تم تصدير التقرير بنجاح', 'success');
+      showToast(t('analytics.exportSuccess'), 'success');
     } catch (err) {
       showToast(apiErrorMessage(err), 'error');
     }
@@ -50,12 +52,12 @@ export default function AnalyticsPage() {
   const { stats, statusCounts, vendorSummary, topProducts, monthlyOrders } = data;
 
   const statCards = [
-    { icon: 'fa-clipboard-list', bg: 'var(--blue-light)', value: stats.totalOrders, label: 'إجمالي الطلبات' },
-    { icon: 'fa-check', bg: 'var(--green-100)', value: stats.deliveredOrders, label: 'طلبات مسلّمة' },
-    { icon: 'fa-coins', bg: 'var(--green-100)', value: formatCurrency(stats.totalRevenue), label: 'إجمالي الإيرادات' },
-    { icon: 'fa-hourglass-half', bg: 'var(--orange-light)', value: formatCurrency(stats.pendingPayment), label: 'مستحق للموردين' },
-    { icon: 'fa-chart-column', bg: 'var(--purple-light)', value: formatCurrency(stats.avgOrderValue), label: 'متوسط قيمة الطلب' },
-    { icon: 'fa-industry', bg: 'var(--yellow-light)', value: stats.vendorsCount, label: 'عدد الموردين' },
+    { icon: 'fa-clipboard-list', bg: 'var(--blue-light)', value: stats.totalOrders, label: t('analytics.stats.totalOrders') },
+    { icon: 'fa-check', bg: 'var(--green-100)', value: stats.deliveredOrders, label: t('analytics.stats.deliveredOrders') },
+    { icon: 'fa-coins', bg: 'var(--green-100)', value: formatCurrency(stats.totalRevenue), label: t('analytics.stats.totalRevenue') },
+    { icon: 'fa-hourglass-half', bg: 'var(--orange-light)', value: formatCurrency(stats.pendingPayment), label: t('analytics.stats.pendingPayment') },
+    { icon: 'fa-chart-column', bg: 'var(--purple-light)', value: formatCurrency(stats.avgOrderValue), label: t('analytics.stats.avgOrderValue') },
+    { icon: 'fa-industry', bg: 'var(--yellow-light)', value: stats.vendorsCount, label: t('analytics.stats.vendorsCount') },
   ];
 
   const presentStatuses = STATUS_KEYS.filter((k) => (statusCounts[k] || 0) > 0);
@@ -77,10 +79,10 @@ export default function AnalyticsPage() {
 
       <div className="charts-grid">
         <div className="chart-card">
-          <h4>توزيع الطلبات حسب الحالة</h4>
+          <h4>{t('analytics.charts.ordersByStatus')}</h4>
           <Doughnut
             data={{
-              labels: presentStatuses.map((k) => STATUS_LABELS[k]),
+              labels: presentStatuses.map((k) => t(`status.${k}`)),
               datasets: [{
                 data: presentStatuses.map((k) => statusCounts[k]),
                 backgroundColor: presentStatuses.map((k) => STATUS_COLORS[STATUS_KEYS.indexOf(k)]),
@@ -93,11 +95,11 @@ export default function AnalyticsPage() {
         </div>
 
         <div className="chart-card">
-          <h4>الإيراد حسب المورد</h4>
+          <h4>{t('analytics.charts.revenueByVendor')}</h4>
           <Bar
             data={{
               labels: revVendors.map((v) => v.nameAr || v.name),
-              datasets: [{ label: 'الإيراد (د.إ)', data: revVendors.map((v) => v.revenue), backgroundColor: '#1E7C3F', borderRadius: 6 }],
+              datasets: [{ label: t('analytics.charts.revenueAed'), data: revVendors.map((v) => v.revenue), backgroundColor: '#1E7C3F', borderRadius: 6 }],
             }}
             options={{
               responsive: true,
@@ -108,11 +110,11 @@ export default function AnalyticsPage() {
         </div>
 
         <div className="chart-card">
-          <h4>أكثر المنتجات طلباً</h4>
+          <h4>{t('analytics.charts.topProducts')}</h4>
           <Bar
             data={{
               labels: topProducts.map((p) => p.name),
-              datasets: [{ label: 'الكمية المطلوبة', data: topProducts.map((p) => p.qty), backgroundColor: '#25964C', borderRadius: 6 }],
+              datasets: [{ label: t('analytics.charts.orderedQty'), data: topProducts.map((p) => p.qty), backgroundColor: '#25964C', borderRadius: 6 }],
             }}
             options={{
               indexAxis: 'y',
@@ -124,12 +126,12 @@ export default function AnalyticsPage() {
         </div>
 
         <div className="chart-card">
-          <h4>الطلبات خلال الأشهر الأخيرة</h4>
+          <h4>{t('analytics.charts.ordersOverMonths')}</h4>
           <Line
             data={{
               labels: monthlyOrders.map((m) => m.month),
               datasets: [{
-                label: 'عدد الطلبات',
+                label: t('analytics.charts.ordersCount'),
                 data: monthlyOrders.map((m) => m.count),
                 borderColor: '#1E7C3F',
                 backgroundColor: 'rgba(30,124,63,.1)',
@@ -150,15 +152,15 @@ export default function AnalyticsPage() {
 
       <div className="card" style={{ marginTop: 20 }}>
         <div className="card-header">
-          <h3>ملخص الموردين</h3>
+          <h3>{t('analytics.vendorSummary.title')}</h3>
           <button className="btn btn-secondary btn-sm" onClick={exportExcel}>
-            <i className="fa-solid fa-download" aria-hidden="true" /> تصدير Excel
+            <i className="fa-solid fa-download" aria-hidden="true" /> {t('analytics.vendorSummary.exportExcel')}
           </button>
         </div>
         <div className="table-wrapper">
           <table>
             <thead>
-              <tr><th>المورد</th><th>عدد الطلبات</th><th>الإيراد الكلي</th><th>المستحق</th><th>شروط الدفع</th></tr>
+              <tr><th>{t('common.vendor')}</th><th>{t('analytics.vendorSummary.ordersCount')}</th><th>{t('analytics.vendorSummary.totalRevenue')}</th><th>{t('analytics.vendorSummary.pending')}</th><th>{t('analytics.vendorSummary.payoutTerms')}</th></tr>
             </thead>
             <tbody>
               {vendorSummary.map((v) => (
@@ -169,9 +171,9 @@ export default function AnalyticsPage() {
                   <td className={v.pending > 0 ? 'text-red fw-bold' : 'text-muted'}>{formatCurrency(v.pending)}</td>
                   <td>
                     {v.payoutTerms === 0 ? (
-                      <span className="badge badge-confirmed">فوري</span>
+                      <span className="badge badge-confirmed">{t('analytics.vendorSummary.immediate')}</span>
                     ) : (
-                      <span className="badge badge-preparing">بعد {v.payoutTerms} يوم</span>
+                      <span className="badge badge-preparing">{t('analytics.vendorSummary.afterDays', { count: v.payoutTerms })}</span>
                     )}
                   </td>
                 </tr>

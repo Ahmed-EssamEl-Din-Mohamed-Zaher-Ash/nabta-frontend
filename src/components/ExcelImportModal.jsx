@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import api, { apiErrorMessage } from '../api/client.js';
 import Modal from './Modal.jsx';
 import { useToast } from './ToastHost.jsx';
@@ -31,11 +32,13 @@ export default function ExcelImportModal({
   templateName,
   needsVendors = false,
   columnsHint,
-  itemNoun = 'صف',
+  itemNoun,
   onClose,
   onImported,
 }) {
+  const { t } = useTranslation();
   const showToast = useToast();
+  const noun = itemNoun ?? t('importModal.rowNoun');
   const [vendors, setVendors] = useState([]);
   const [rows, setRows] = useState([]);
   const [importing, setImporting] = useState(false);
@@ -56,7 +59,7 @@ export default function ExcelImportModal({
       const buffer = await file.arrayBuffer();
       setRows(readWorkbookRows(buffer));
     } catch {
-      showToast('خطأ في قراءة الملف', 'error');
+      showToast(t('importModal.readError'), 'error');
       setRows([]);
     }
   }
@@ -76,7 +79,7 @@ export default function ExcelImportModal({
       const localSkipped = rows.length - mapped.length;
 
       if (mapped.length === 0) {
-        showToast('لا توجد صفوف صالحة للاستيراد', 'warning');
+        showToast(t('importModal.noValidRows'), 'warning');
         return;
       }
 
@@ -86,8 +89,8 @@ export default function ExcelImportModal({
       const skipped = (data.skipped ?? 0) + localSkipped;
       showToast(
         skipped > 0
-          ? `تم استيراد ${created} ${itemNoun} (تم تخطي ${skipped} — تحقق من البيانات أو التكرار)`
-          : `تم استيراد ${created} ${itemNoun}`,
+          ? t('importModal.importedWithSkipped', { created, noun, skipped })
+          : t('importModal.imported', { created, noun }),
         skipped > 0 ? 'warning' : 'success'
       );
       onImported();
@@ -108,9 +111,9 @@ export default function ExcelImportModal({
       onClose={onClose}
       footer={
         <>
-          <button className="btn btn-secondary" onClick={onClose}>إلغاء</button>
+          <button className="btn btn-secondary" onClick={onClose}>{t('common.cancel')}</button>
           <button className="btn btn-primary" onClick={doImport} disabled={!rows.length || importing}>
-            {importing ? 'جارٍ الاستيراد…' : `استيراد ${rows.length} صف`}
+            {importing ? t('importModal.importing') : t('importModal.importCount', { count: rows.length })}
           </button>
         </>
       }
@@ -118,7 +121,7 @@ export default function ExcelImportModal({
       <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 12, flexWrap: 'wrap' }}>
         <input type="file" accept=".xlsx,.xls,.csv" onChange={handleFile} />
         <button className="btn btn-secondary btn-sm" onClick={downloadTemplate}>
-          <i className="fa-solid fa-download" aria-hidden="true" /> تحميل القالب
+          <i className="fa-solid fa-download" aria-hidden="true" /> {t('importModal.downloadTemplate')}
         </button>
       </div>
       {columnsHint && (
@@ -141,7 +144,7 @@ export default function ExcelImportModal({
               </tbody>
             </table>
           </div>
-          <p className="text-muted mt-2">إجمالي: {rows.length} صف (يُعرض أول 5)</p>
+          <p className="text-muted mt-2">{t('importModal.previewSummary', { count: rows.length })}</p>
         </>
       )}
     </Modal>

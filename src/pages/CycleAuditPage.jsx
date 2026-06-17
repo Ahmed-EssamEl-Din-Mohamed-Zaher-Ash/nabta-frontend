@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import api, { apiErrorMessage } from '../api/client.js';
 import { useToast } from '../components/ToastHost.jsx';
 import StatusBadge from '../components/StatusBadge.jsx';
-import { STATUS_LABELS } from '../constants/permissions.js';
 import { formatCurrency, orderTotals } from '../utils/format.js';
 
 // Admin-only — React port of legacy renderCycleAudit()
@@ -17,6 +17,7 @@ const PIPELINE_STAGES = ['new', 'confirmed', 'preparing', 'ready', 'out', 'deliv
 const fmtDate = (d) => (d ? String(d).slice(0, 10) : '-');
 
 function StageDots({ status }) {
+  const { t } = useTranslation();
   const curIdx = PIPELINE_STAGES.indexOf(status);
   const isFailed = status === 'failed';
   return (
@@ -42,7 +43,7 @@ function StageDots({ status }) {
         }
         return (
           <span key={s} style={{ display: 'inline-flex', alignItems: 'center', gap: 2 }}>
-            <span title={STATUS_LABELS[s]} style={style}>{glyph}</span>
+            <span title={t(`status.${s}`)} style={style}>{glyph}</span>
             {i < PIPELINE_STAGES.length - 1 && (
               <span style={{ color: 'var(--gray-300)', fontSize: 9 }}>→</span>
             )}
@@ -54,6 +55,7 @@ function StageDots({ status }) {
 }
 
 export default function CycleAuditPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const showToast = useToast();
   const [orders, setOrders] = useState(null);
@@ -86,7 +88,7 @@ export default function CycleAuditPage() {
         ]);
         excel.exportMasterExcel(orders, v.data.vendors, c.data.customers, d.data.drivers);
       }
-      showToast('تم تصدير الملف بنجاح', 'success');
+      showToast(t('cycleAudit.exportSuccess'), 'success');
     } catch (err) {
       showToast(apiErrorMessage(err), 'error');
     }
@@ -104,10 +106,10 @@ export default function CycleAuditPage() {
   const journey = [...orders].slice(0, 50);
 
   const exportButtons = [
-    { kind: 'sales', icon: 'fa-briefcase', label: 'تصدير المبيعات', chip: 'شيتان', chipBg: 'var(--blue-light)', chipColor: 'var(--blue)' },
-    { kind: 'account', icon: 'fa-box', label: 'تصدير الحسابات', chip: 'شيتان', chipBg: 'var(--yellow-light)', chipColor: '#92400E' },
-    { kind: 'ops', icon: 'fa-truck', label: 'تصدير التوصيل', chip: 'شيتان', chipBg: 'var(--orange-light)', chipColor: '#9A3412' },
-    { kind: 'finance', icon: 'fa-coins', label: 'تصدير المحاسبة', chip: '3 شيتات', chipBg: 'var(--green-100)', chipColor: 'var(--green-700)' },
+    { kind: 'sales', icon: 'fa-briefcase', label: t('cycleAudit.exportSales'), chip: t('cycleAudit.sheets', { count: 2 }), chipBg: 'var(--blue-light)', chipColor: 'var(--blue)' },
+    { kind: 'account', icon: 'fa-box', label: t('cycleAudit.exportAccount'), chip: t('cycleAudit.sheets', { count: 2 }), chipBg: 'var(--yellow-light)', chipColor: '#92400E' },
+    { kind: 'ops', icon: 'fa-truck', label: t('cycleAudit.exportOps'), chip: t('cycleAudit.sheets', { count: 2 }), chipBg: 'var(--orange-light)', chipColor: '#9A3412' },
+    { kind: 'finance', icon: 'fa-coins', label: t('cycleAudit.exportFinance'), chip: t('cycleAudit.sheets', { count: 3 }), chipBg: 'var(--green-100)', chipColor: 'var(--green-700)' },
   ];
 
   return (
@@ -115,11 +117,11 @@ export default function CycleAuditPage() {
       {/* Pipeline overview */}
       <div className="card" style={{ marginBottom: 20 }}>
         <div className="card-header">
-          <h3><i className="fa-solid fa-rotate" aria-hidden="true" /> خط أنابيب الطلبات — Pipeline View</h3>
+          <h3><i className="fa-solid fa-rotate" aria-hidden="true" /> {t('cycleAudit.pipelineTitle')}</h3>
           <div style={{ display: 'flex', gap: 8 }}>
-            <button className="btn btn-secondary btn-sm" onClick={() => navigate('/orders')}>← الطلبات</button>
+            <button className="btn btn-secondary btn-sm" onClick={() => navigate('/orders')}>← {t('nav.orders')}</button>
             <button className="btn btn-primary btn-sm" onClick={() => runExport('master')}>
-              <i className="fa-solid fa-download" aria-hidden="true" /> تصدير الملف الشامل
+              <i className="fa-solid fa-download" aria-hidden="true" /> {t('cycleAudit.exportMaster')}
             </button>
           </div>
         </div>
@@ -134,7 +136,7 @@ export default function CycleAuditPage() {
                   <div style={{ flex: 1, minWidth: 100, textAlign: 'center' }}>
                     <div style={{ fontSize: 24, fontWeight: 900, color }}>{c}</div>
                     <div style={{ fontSize: 11, color: 'var(--gray-600)', fontWeight: 600, margin: '4px 0' }}>
-                      {STATUS_LABELS[s]}
+                      {t(`status.${s}`)}
                     </div>
                     <div style={{ height: 6, background: 'var(--gray-100)', borderRadius: 3, overflow: 'hidden', margin: '0 4px' }}>
                       <div style={{ height: '100%', width: `${pct}%`, background: color, borderRadius: 3, transition: 'width .6s ease' }} />
@@ -150,11 +152,11 @@ export default function CycleAuditPage() {
           </div>
           {counts.failed > 0 ? (
             <div style={{ marginTop: 12, background: 'var(--red-light)', color: 'var(--red)', padding: '8px 14px', borderRadius: 8, fontSize: 13, fontWeight: 600 }}>
-              <i className="fa-solid fa-triangle-exclamation" aria-hidden="true" /> {counts.failed} طلب بحالة فشل التسليم — يتطلب مراجعة
+              <i className="fa-solid fa-triangle-exclamation" aria-hidden="true" /> {t('cycleAudit.failedAlert', { count: counts.failed })}
             </div>
           ) : (
             <div style={{ marginTop: 12, background: 'var(--green-100)', color: 'var(--green-700)', padding: '8px 14px', borderRadius: 8, fontSize: 13, fontWeight: 600 }}>
-              <i className="fa-solid fa-check" aria-hidden="true" /> لا توجد طلبات فاشلة
+              <i className="fa-solid fa-check" aria-hidden="true" /> {t('cycleAudit.noFailed')}
             </div>
           )}
         </div>
@@ -169,7 +171,7 @@ export default function CycleAuditPage() {
             <div className="stat-card" key={s} style={{ borderRight: `4px solid ${PIPELINE_COLORS[s]}` }}>
               <div>
                 <div style={{ fontSize: 22, fontWeight: 900, color: PIPELINE_COLORS[s] }}>{counts[s]}</div>
-                <div style={{ fontSize: 11, color: 'var(--gray-500)' }}>{STATUS_LABELS[s]}</div>
+                <div style={{ fontSize: 11, color: 'var(--gray-500)' }}>{t(`status.${s}`)}</div>
                 <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--gray-700)', marginTop: 4 }}>
                   {formatCurrency(val)}
                 </div>
@@ -182,7 +184,7 @@ export default function CycleAuditPage() {
       {/* Export by stage */}
       <div className="card" style={{ marginBottom: 20 }}>
         <div className="card-header">
-          <h3><i className="fa-solid fa-file-import" aria-hidden="true" /> تصدير حسب المرحلة</h3>
+          <h3><i className="fa-solid fa-file-import" aria-hidden="true" /> {t('cycleAudit.exportByStage')}</h3>
         </div>
         <div className="card-body">
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
@@ -195,9 +197,9 @@ export default function CycleAuditPage() {
               </button>
             ))}
             <button className="btn btn-primary" onClick={() => runExport('master')}>
-              <i className="fa-solid fa-download" aria-hidden="true" /> تصدير الملف الشامل
+              <i className="fa-solid fa-download" aria-hidden="true" /> {t('cycleAudit.exportMaster')}
               <span style={{ background: 'rgba(255,255,255,.25)', color: '#fff', padding: '2px 8px', borderRadius: 10, fontSize: 11, marginRight: 4 }}>
-                6 شيتات
+                {t('cycleAudit.sheets', { count: 6 })}
               </span>
             </button>
           </div>
@@ -206,13 +208,13 @@ export default function CycleAuditPage() {
 
       {/* Order journey table */}
       <div className="card">
-        <div className="card-header"><h3>رحلة الطلبات (آخر 50)</h3></div>
+        <div className="card-header"><h3>{t('cycleAudit.journeyTitle', { count: 50 })}</h3></div>
         <div className="table-wrapper">
           <table>
             <thead>
               <tr>
-                <th>رقم الطلب</th><th>التاريخ</th><th>العميل</th><th>المورد</th><th>السائق</th>
-                <th>الحالة</th><th>الرحلة</th><th>الإجمالي</th><th>تاريخ التأكيد</th><th>تاريخ التسليم</th>
+                <th>{t('cycleAudit.orderNumber')}</th><th>{t('common.date')}</th><th>{t('common.customer')}</th><th>{t('common.vendor')}</th><th>{t('common.driver')}</th>
+                <th>{t('common.status')}</th><th>{t('cycleAudit.journey')}</th><th>{t('common.total')}</th><th>{t('cycleAudit.confirmedAt')}</th><th>{t('cycleAudit.deliveredAt')}</th>
               </tr>
             </thead>
             <tbody>

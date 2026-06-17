@@ -1,4 +1,5 @@
 import axios from 'axios';
+import i18n from '../i18n/index.js';
 
 export const TOKEN_KEY = 'nabta_token';
 
@@ -41,9 +42,14 @@ api.interceptors.response.use(
   }
 );
 
-/** Extract a human-readable Arabic message from an API error. */
-export function apiErrorMessage(error, fallback = 'حدث خطأ غير متوقع. حاول مرة أخرى.') {
-  return error?.response?.data?.error || (error?.code === 'ECONNABORTED' ? 'انتهت مهلة الاتصال بالخادم.' : fallback);
+/**
+ * Extract a human-readable message from an API error. The server's own error
+ * text (error.response.data.error) is shown as-is when present; the local
+ * fallbacks are localized via i18n (resolved at call time).
+ */
+export function apiErrorMessage(error, fallback) {
+  const fb = fallback ?? i18n.t('errors.unexpected');
+  return error?.response?.data?.error || (error?.code === 'ECONNABORTED' ? i18n.t('errors.timeout') : fb);
 }
 
 export default api;

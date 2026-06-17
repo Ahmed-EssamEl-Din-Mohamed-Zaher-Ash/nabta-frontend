@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import CrudPage from '../components/CrudPage.jsx';
 import ExcelImportModal from '../components/ExcelImportModal.jsx';
 
@@ -6,18 +7,19 @@ import ExcelImportModal from '../components/ExcelImportModal.jsx';
 // Note: the Vendor model has no `location` field, so unlike legacy we never
 // send one (Prisma rejects unknown fields).
 export default function VendorsPage() {
+  const { t } = useTranslation();
   const [importing, setImporting] = useState(null); // { refresh } when open
 
   return (
     <>
       {importing && (
         <ExcelImportModal
-          title="استيراد الموردين من Excel"
+          title={t('vendors.importTitle')}
           bulkEndpoint="/api/vendors/bulk"
           mapperName="mapExcelRowToVendor"
           templateName="downloadVendorsTemplate"
-          itemNoun="مورد"
-          columnsHint="الأعمدة المدعومة: الاسم بالعربي، الاسم بالإنجليزي، الهاتف، البريد، العنوان، اسم البنك، IBAN، رقم الحساب، اسم صاحب الحساب، شروط الدفع (أيام)، نسبة العمولة، لغة المراسلة، ملاحظات"
+          itemNoun={t('vendors.itemNoun')}
+          columnsHint={t('vendors.columnsHint')}
           onClose={() => setImporting(null)}
           onImported={importing.refresh}
         />
@@ -25,26 +27,26 @@ export default function VendorsPage() {
     <CrudPage
       toolbarExtra={({ refresh }) => (
         <button className="btn btn-secondary" onClick={() => setImporting({ refresh })}>
-          <i className="fa-solid fa-file-excel" aria-hidden="true" /> استيراد Excel
+          <i className="fa-solid fa-file-excel" aria-hidden="true" /> {t('vendors.importExcel')}
         </button>
       )}
       entity="vendors"
       listKey="vendors"
-      countLabel={(n) => `${n} مورد`}
-      addLabel="+ إضافة مورد"
-      modalTitles={{ add: 'إضافة مورد جديد', edit: 'تعديل المورد' }}
+      countLabel={(n) => t('vendors.count', { count: n })}
+      addLabel={t('vendors.add')}
+      modalTitles={{ add: t('vendors.addTitle'), edit: t('vendors.editTitle') }}
       messages={{
-        added: 'تم إضافة المورد',
-        updated: 'تم تعديل المورد',
-        deleted: 'تم حذف المورد',
-        confirmTitle: 'حذف المورد',
-        confirmText: 'هل تريد حذف هذا المورد؟',
+        added: t('vendors.added'),
+        updated: t('vendors.updated'),
+        deleted: t('vendors.deleted'),
+        confirmTitle: t('vendors.confirmTitle'),
+        confirmText: t('vendors.confirmText'),
       }}
       editRoles={['admin', 'account']}
       deleteRoles={['admin']}
       columns={[
         {
-          header: 'اسم المورد',
+          header: t('vendors.vendorName'),
           render: (v) => (
             <>
               <strong>{v.nameAr || v.name}</strong>
@@ -53,9 +55,9 @@ export default function VendorsPage() {
             </>
           ),
         },
-        { header: 'الهاتف', render: (v) => v.phone || '-' },
-        { header: 'البريد', render: (v) => v.email || '-' },
-        { header: 'البنك', render: (v) => v.bankName || '-' },
+        { header: t('common.phone'), render: (v) => v.phone || '-' },
+        { header: t('common.email'), render: (v) => v.email || '-' },
+        { header: t('vendors.bank'), render: (v) => v.bankName || '-' },
         {
           header: 'IBAN',
           render: (v) => (
@@ -63,49 +65,49 @@ export default function VendorsPage() {
           ),
         },
         {
-          header: 'شروط الدفع',
+          header: t('vendors.payoutTerms'),
           render: (v) =>
             v.payoutTerms === 0 ? (
-              <span className="badge badge-confirmed">فوري</span>
+              <span className="badge badge-confirmed">{t('vendors.immediate')}</span>
             ) : (
-              <span className="badge badge-preparing">بعد {v.payoutTerms} يوم</span>
+              <span className="badge badge-preparing">{t('vendors.afterDays', { count: v.payoutTerms })}</span>
             ),
         },
       ]}
       fields={[
-        { name: 'nameAr', label: 'الاسم بالعربي', required: true, half: true, placeholder: 'اسم المورد بالعربي' },
-        { name: 'name', label: 'الاسم بالإنجليزي', half: true },
-        { name: 'phone', label: 'الهاتف', half: true, placeholder: '+971501234567' },
-        { name: 'email', label: 'البريد الإلكتروني', type: 'email', half: true },
-        { name: 'address', label: 'العنوان', placeholder: 'عنوان المورد' },
-        { name: 'bankName', label: 'اسم البنك', half: true, placeholder: 'مثال: بنك الإمارات دبي الوطني' },
+        { name: 'nameAr', label: t('vendors.nameAr'), required: true, half: true, placeholder: t('vendors.nameArPlaceholder') },
+        { name: 'name', label: t('vendors.nameEn'), half: true },
+        { name: 'phone', label: t('common.phone'), half: true, placeholder: '+971501234567' },
+        { name: 'email', label: t('common.email'), type: 'email', half: true },
+        { name: 'address', label: t('common.address'), placeholder: t('vendors.addressPlaceholder') },
+        { name: 'bankName', label: t('vendors.bankName'), half: true, placeholder: t('vendors.bankNamePlaceholder') },
         { name: 'iban', label: 'IBAN', half: true, placeholder: 'AE07...' },
-        { name: 'accountNumber', label: 'رقم الحساب', half: true },
-        { name: 'accountHolder', label: 'اسم صاحب الحساب', half: true },
+        { name: 'accountNumber', label: t('vendors.accountNumber'), half: true },
+        { name: 'accountHolder', label: t('vendors.accountHolder'), half: true },
         {
           name: 'payoutTerms',
-          label: 'شروط الدفع (بالأيام) — 0 = فوري',
+          label: t('vendors.payoutTermsField'),
           type: 'number',
           default: 7,
-          hint: '0 = دفع فوري | 7 = بعد 7 أيام | 30 = بعد 30 يوم',
+          hint: t('vendors.payoutTermsHint'),
         },
         {
           name: 'commissionRate',
-          label: 'نسبة عمولة نبتة (%)',
+          label: t('vendors.commissionRate'),
           type: 'number',
           half: true,
           step: '0.1',
-          hint: 'اتركه فارغاً لاستخدام النسبة الافتراضية',
+          hint: t('vendors.commissionRateHint'),
         },
         {
           name: 'preferredLanguage',
-          label: 'لغة المراسلة',
+          label: t('common.messagingLang'),
           type: 'select',
           half: true,
           default: 'ar',
-          options: [{ value: 'ar', label: 'العربية' }, { value: 'en', label: 'الإنجليزية' }],
+          options: [{ value: 'ar', label: t('lang.ar') }, { value: 'en', label: t('lang.en') }],
         },
-        { name: 'notes', label: 'ملاحظات', type: 'textarea' },
+        { name: 'notes', label: t('common.notes'), type: 'textarea' },
       ]}
       toPayload={(v) => ({
         nameAr: v.nameAr.trim(),
@@ -125,26 +127,26 @@ export default function VendorsPage() {
       viewModal={(v) => (
         <>
           <div className="form-row">
-            <div><div className="order-info-label">الاسم العربي</div><div className="order-info-value">{v.nameAr || '-'}</div></div>
-            <div><div className="order-info-label">الاسم الإنجليزي</div><div className="order-info-value">{v.name || '-'}</div></div>
-            <div><div className="order-info-label">الهاتف</div><div className="order-info-value">{v.phone || '-'}</div></div>
-            <div><div className="order-info-label">البريد</div><div className="order-info-value">{v.email || '-'}</div></div>
+            <div><div className="order-info-label">{t('vendors.nameAr')}</div><div className="order-info-value">{v.nameAr || '-'}</div></div>
+            <div><div className="order-info-label">{t('vendors.nameEn')}</div><div className="order-info-value">{v.name || '-'}</div></div>
+            <div><div className="order-info-label">{t('common.phone')}</div><div className="order-info-value">{v.phone || '-'}</div></div>
+            <div><div className="order-info-label">{t('common.email')}</div><div className="order-info-value">{v.email || '-'}</div></div>
           </div>
           <hr className="form-divider" />
           <div className="form-section-title">
-            <i className="fa-solid fa-credit-card" aria-hidden="true" /> البيانات البنكية
+            <i className="fa-solid fa-credit-card" aria-hidden="true" /> {t('vendors.bankDetails')}
           </div>
           <div className="form-row">
-            <div><div className="order-info-label">البنك</div><div className="order-info-value">{v.bankName || '-'}</div></div>
+            <div><div className="order-info-label">{t('vendors.bank')}</div><div className="order-info-value">{v.bankName || '-'}</div></div>
             <div>
               <div className="order-info-label">IBAN</div>
               <div className="order-info-value" style={{ direction: 'ltr', fontFamily: 'monospace' }}>{v.iban || '-'}</div>
             </div>
-            <div><div className="order-info-label">رقم الحساب</div><div className="order-info-value">{v.accountNumber || '-'}</div></div>
-            <div><div className="order-info-label">صاحب الحساب</div><div className="order-info-value">{v.accountHolder || '-'}</div></div>
+            <div><div className="order-info-label">{t('vendors.accountNumber')}</div><div className="order-info-value">{v.accountNumber || '-'}</div></div>
+            <div><div className="order-info-label">{t('vendors.accountHolderShort')}</div><div className="order-info-value">{v.accountHolder || '-'}</div></div>
           </div>
           <div className="mt-3" style={{ background: 'var(--orange-light)', padding: 10, borderRadius: 8, fontSize: 13 }}>
-            ⏰ شروط الدفع: <strong>{v.payoutTerms === 0 ? 'دفع فوري' : `بعد ${v.payoutTerms} يوم`}</strong>
+            ⏰ {t('vendors.payoutTerms')}: <strong>{v.payoutTerms === 0 ? t('vendors.immediatePayment') : t('vendors.afterDays', { count: v.payoutTerms })}</strong>
           </div>
         </>
       )}

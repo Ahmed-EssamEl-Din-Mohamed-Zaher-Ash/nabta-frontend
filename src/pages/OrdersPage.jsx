@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import api, { apiErrorMessage } from '../api/client.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useToast } from '../components/ToastHost.jsx';
-import { ROLE_STATUS_FILTER, STATUS_LABELS, getStatusAction } from '../constants/permissions.js';
+import { ROLE_STATUS_FILTER, getStatusAction } from '../constants/permissions.js';
 import { formatCurrency, orderTotals } from '../utils/format.js';
 import StatusBadge from '../components/StatusBadge.jsx';
 import RoleGate from '../components/RoleGate.jsx';
@@ -18,6 +19,7 @@ function vendorLabel(o) {
 }
 
 export default function OrdersPage() {
+  const { t } = useTranslation();
   const { role } = useAuth();
   const showToast = useToast();
   const navigate = useNavigate();
@@ -55,7 +57,10 @@ export default function OrdersPage() {
     if (!action) return;
     try {
       await api.patch(`/api/orders/${order.id}/status`, { status: action.next });
-      showToast(`تم تغيير حالة ${order.orderNumber} إلى: ${STATUS_LABELS[action.next]}`, 'success');
+      showToast(
+        t('orders.statusChanged', { number: order.orderNumber, status: t(`status.${action.next}`) }),
+        'success',
+      );
       fetchOrders();
     } catch (err) {
       showToast(apiErrorMessage(err), 'error');
@@ -65,7 +70,7 @@ export default function OrdersPage() {
   async function fail(order) {
     try {
       await api.patch(`/api/orders/${order.id}/status`, { status: 'failed', failureReason: 'فشل التسليم' });
-      showToast(`تم تسجيل فشل تسليم ${order.orderNumber}`, 'error');
+      showToast(t('orders.deliveryFailedRecorded', { number: order.orderNumber }), 'error');
       fetchOrders();
     } catch (err) {
       showToast(apiErrorMessage(err), 'error');
@@ -90,7 +95,7 @@ export default function OrdersPage() {
         customers: c.data.customers,
         drivers: needsDrivers ? d.data.drivers : [],
       });
-      showToast('تم تصدير الملف بنجاح', 'success');
+      showToast(t('orders.exportSuccess'), 'success');
     } catch (err) {
       showToast(apiErrorMessage(err), 'error');
     }
@@ -99,31 +104,31 @@ export default function OrdersPage() {
   return (
     <>
       <div className="page-toolbar">
-        <h3 style={{ fontSize: 16, fontWeight: 700 }}>{visible.length} طلب</h3>
+        <h3 style={{ fontSize: 16, fontWeight: 700 }}>{t('orders.count', { count: visible.length })}</h3>
         <div className="toolbar-right">
           <select className="filter-select" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-            <option value="">كل الحالات</option>
+            <option value="">{t('orders.allStatuses')}</option>
             {allowed.map((s) => (
-              <option key={s} value={s}>{STATUS_LABELS[s]}</option>
+              <option key={s} value={s}>{t(`status.${s}`)}</option>
             ))}
           </select>
           <RoleGate roles={['sales', 'admin']}>
             <button className="btn btn-primary" onClick={() => navigate('/add-order')}>
-              + إضافة طلب
+              + {t('orders.addOrder')}
             </button>
           </RoleGate>
           <RoleGate roles={['sales', 'account', 'ops', 'finance', 'admin']}>
-            <button className="btn btn-secondary" onClick={exportExcel} title="تصدير Excel حسب مرحلتك">
-              <i className="fa-solid fa-file-excel" aria-hidden="true" /> تصدير Excel
+            <button className="btn btn-secondary" onClick={exportExcel} title={t('orders.exportExcelTitle')}>
+              <i className="fa-solid fa-file-excel" aria-hidden="true" /> {t('orders.exportExcel')}
             </button>
           </RoleGate>
           <RoleGate roles={['admin']}>
             <button
               className="btn btn-primary btn-sm"
-              title="مراجعة دورة الحياة الكاملة"
+              title={t('orders.cycleAuditTitle')}
               onClick={() => navigate('/cycle-audit')}
             >
-              <i className="fa-solid fa-rotate" aria-hidden="true" /> مراجعة الدورة
+              <i className="fa-solid fa-rotate" aria-hidden="true" /> {t('orders.cycleAudit')}
             </button>
           </RoleGate>
         </div>
@@ -134,8 +139,8 @@ export default function OrdersPage() {
           <table>
             <thead>
               <tr>
-                <th>رقم الطلب</th><th>العميل</th><th>المورد</th><th>الحالة</th>
-                <th>الإجمالي</th><th>التاريخ</th><th>إجراءات</th>
+                <th>{t('orders.orderNumber')}</th><th>{t('common.customer')}</th><th>{t('common.vendor')}</th><th>{t('common.status')}</th>
+                <th>{t('common.total')}</th><th>{t('common.date')}</th><th>{t('common.actions')}</th>
               </tr>
             </thead>
             <tbody>
@@ -145,7 +150,7 @@ export default function OrdersPage() {
                 <tr>
                   <td colSpan={7}>
                     <div className="empty-state" style={{ padding: 30 }}>
-                      <h3>لا توجد طلبات</h3>
+                      <h3>{t('orders.empty')}</h3>
                     </div>
                   </td>
                 </tr>
@@ -160,20 +165,20 @@ export default function OrdersPage() {
                     <td>{o.date}</td>
                     <td>
                       <div className="table-actions">
-                        <button className="btn btn-info btn-sm" onClick={() => setViewedId(o.id)}>عرض</button>
+                        <button className="btn btn-info btn-sm" onClick={() => setViewedId(o.id)}>{t('common.view')}</button>
                         <RoleGate status={o.status}>
                           {(action) => (
                             <button className="btn btn-primary btn-sm" onClick={() => advance(o)}>
-                              {action.label}
+                              {t(`orders.action.${action.next}`)}
                             </button>
                           )}
                         </RoleGate>
                         {o.status === 'out' && ['ops', 'admin'].includes(role) && (
-                          <button className="btn btn-danger btn-sm" onClick={() => fail(o)}>فشل التسليم</button>
+                          <button className="btn btn-danger btn-sm" onClick={() => fail(o)}>{t('orders.markFailed')}</button>
                         )}
                         {o.status === 'new' && ['sales', 'admin'].includes(role) && (
                           <button className="btn btn-warning btn-sm" onClick={() => navigate(`/add-order?edit=${o.id}`)}>
-                            تعديل
+                            {t('common.edit')}
                           </button>
                         )}
                       </div>

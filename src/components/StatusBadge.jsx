@@ -1,5 +1,6 @@
-import { STATUS_LABELS } from '../constants/permissions.js';
+import { useTranslation } from 'react-i18next';
 
 export default function StatusBadge({ status }) {
-  return <span className={`badge badge-${status}`}>{STATUS_LABELS[status] || status}</span>;
+  const { t } = useTranslation();
+  return <span className={`badge badge-${status}`}>{t(`status.${status}`, status)}</span>;
 }

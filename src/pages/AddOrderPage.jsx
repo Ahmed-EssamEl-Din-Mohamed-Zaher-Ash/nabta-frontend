@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import api, { apiErrorMessage } from '../api/client.js';
 import { useToast } from '../components/ToastHost.jsx';
 import MapPickerModal from '../components/MapPickerModal.jsx';
@@ -10,6 +11,7 @@ let rowKey = 0;
 const newRow = () => ({ key: ++rowKey, productId: '', qty: 1 });
 
 export default function AddOrderPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const showToast = useToast();
   const [searchParams] = useSearchParams();
@@ -83,7 +85,7 @@ export default function AddOrderPage() {
       const prod = productById.get(r.productId);
       if (!prod) return;
       const vId = prod.vendorId || prod.vendor?.id || 'unknown';
-      const vName = prod.vendor?.nameAr || prod.vendor?.name || 'غير محدد';
+      const vName = prod.vendor?.nameAr || prod.vendor?.name || t('common.locationNotSet');
       const line = prod.price * (Number(r.qty) || 0);
       if (!map.has(vId)) map.set(vId, { name: vName, items: 0, subtotal: 0 });
       const g = map.get(vId);
@@ -91,15 +93,15 @@ export default function AddOrderPage() {
       g.subtotal += line;
     });
     return Array.from(map.values());
-  }, [rows, productById]);
+  }, [rows, productById, t]);
 
   function setRow(key, patch) {
     setRows((rs) => rs.map((r) => (r.key === key ? { ...r, ...patch } : r)));
   }
 
   async function save() {
-    if (!form.customerId) return showToast('اختر العميل', 'error');
-    if (!form.deliveryAddress.trim()) return showToast('أدخل عنوان التوصيل', 'error');
+    if (!form.customerId) return showToast(t('addOrder.selectCustomerError'), 'error');
+    if (!form.deliveryAddress.trim()) return showToast(t('addOrder.enterAddressError'), 'error');
 
     const products = rows
       .filter((r) => r.productId && Number(r.qty) > 0)
@@ -118,10 +120,10 @@ export default function AddOrderPage() {
           paymentMethod: form.paymentMethod,
           notes: form.notes,
         });
-        showToast('تم تعديل الطلب', 'success');
+        showToast(t('addOrder.orderUpdated'), 'success');
       } else {
         if (!products.length) {
-          showToast('أضف منتجاً على الأقل', 'error');
+          showToast(t('addOrder.addProductError'), 'error');
           setSubmitting(false);
           return;
         }
@@ -135,7 +137,7 @@ export default function AddOrderPage() {
           paymentMethod: form.paymentMethod,
           notes: form.notes,
         });
-        showToast(`تم إنشاء الطلب ${data.order.orderNumber}`, 'success');
+        showToast(t('addOrder.orderCreated', { number: data.order.orderNumber }), 'success');
       }
       navigate('/orders');
     } catch (err) {
@@ -152,38 +154,38 @@ export default function AddOrderPage() {
   return (
     <div style={{ maxWidth: 900 }}>
       <div className="page-toolbar">
-        <h3 style={{ fontSize: 16, fontWeight: 700 }}>{editMode ? 'تعديل الطلب' : 'إضافة طلب جديد'}</h3>
-        <button className="btn btn-secondary" onClick={() => navigate('/orders')}>← رجوع</button>
+        <h3 style={{ fontSize: 16, fontWeight: 700 }}>{editMode ? t('addOrder.editTitle') : t('addOrder.addTitle')}</h3>
+        <button className="btn btn-secondary" onClick={() => navigate('/orders')}>← {t('common.back')}</button>
       </div>
 
       <div className="card">
-        <div className="card-header"><h3>بيانات العميل والدفع</h3></div>
+        <div className="card-header"><h3>{t('addOrder.customerPaymentSection')}</h3></div>
         <div className="card-body">
           <div className="form-row">
             <div className="form-group">
-              <label>العميل <span className="required-star">*</span></label>
+              <label>{t('common.customer')} <span className="required-star">*</span></label>
               <select value={form.customerId} onChange={(e) => setForm({ ...form, customerId: e.target.value })}>
-                <option value="">-- اختر عميل --</option>
+                <option value="">{t('addOrder.selectCustomerOption')}</option>
                 {lists.customers.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
             </div>
             <div className="form-group">
-              <label>طريقة الدفع <span className="required-star">*</span></label>
+              <label>{t('addOrder.paymentMethod')} <span className="required-star">*</span></label>
               <select value={form.paymentMethod} onChange={(e) => setForm({ ...form, paymentMethod: e.target.value })}>
-                {PAYMENT_METHODS.map((pm) => <option key={pm.value} value={pm.value}>{pm.label}</option>)}
+                {PAYMENT_METHODS.map((pm) => <option key={pm.value} value={pm.value}>{t(`addOrder.paymentMethods.${pm.value}`)}</option>)}
               </select>
             </div>
           </div>
           <div className="form-row">
             <div className="form-group">
-              <label>معدل الضريبة (%)</label>
+              <label>{t('addOrder.taxRate')}</label>
               <input
                 type="number" min="0" max="100" value={form.taxRate}
                 onChange={(e) => setForm({ ...form, taxRate: e.target.value })}
               />
             </div>
             <div className="form-group">
-              <label>رسوم التوصيل (د.إ)</label>
+              <label>{t('addOrder.deliveryFee')}</label>
               <input
                 type="number" min="0" value={form.deliveryFee}
                 onChange={(e) => setForm({ ...form, deliveryFee: e.target.value })}
@@ -194,22 +196,22 @@ export default function AddOrderPage() {
       </div>
 
       <div className="card" style={{ marginTop: 16 }}>
-        <div className="card-header"><h3>عنوان التوصيل والموقع</h3></div>
+        <div className="card-header"><h3>{t('addOrder.deliverySection')}</h3></div>
         <div className="card-body">
           <div className="form-group">
-            <label>عنوان التوصيل <span className="required-star">*</span></label>
+            <label>{t('addOrder.deliveryAddress')} <span className="required-star">*</span></label>
             <input
-              type="text" placeholder="أدخل العنوان التفصيلي" value={form.deliveryAddress}
+              type="text" placeholder={t('addOrder.addressPlaceholder')} value={form.deliveryAddress}
               onChange={(e) => setForm({ ...form, deliveryAddress: e.target.value })}
             />
           </div>
           <div className="form-row">
             <div className="form-group">
-              <label>الموقع على الخريطة</label>
+              <label>{t('common.locationOnMap')}</label>
               <input
                 type="text"
                 readOnly
-                placeholder="لم يتم تحديد الموقع"
+                placeholder={t('common.locationPlaceholder')}
                 value={location ? location.address : ''}
                 style={{ background: 'var(--gray-50)', cursor: 'pointer' }}
                 onClick={() => setPickingLocation(true)}
@@ -217,7 +219,7 @@ export default function AddOrderPage() {
             </div>
             <div className="form-group" style={{ display: 'flex', alignItems: 'flex-end' }}>
               <button className="btn btn-secondary btn-full" onClick={() => setPickingLocation(true)}>
-                <i className="fa-solid fa-location-dot" aria-hidden="true" /> اختيار الموقع من الخريطة
+                <i className="fa-solid fa-location-dot" aria-hidden="true" /> {t('addOrder.pickLocation')}
               </button>
             </div>
           </div>
@@ -242,29 +244,29 @@ export default function AddOrderPage() {
 
       <div className="card" style={{ marginTop: 16 }}>
         <div className="card-header">
-          <h3>المنتجات</h3>
+          <h3>{t('addOrder.productsSection')}</h3>
           {!editMode && (
             <button className="btn btn-primary btn-sm" onClick={() => setRows((rs) => [...rs, newRow()])}>
-              + إضافة منتج
+              + {t('addOrder.addProduct')}
             </button>
           )}
         </div>
         <div className="card-body">
           {editMode ? (
             <p className="text-muted" style={{ fontSize: 13 }}>
-              لا يمكن تعديل المنتجات بعد إنشاء الطلب — لإجراء تغيير على الأصناف قم بإنشاء طلب جديد.
+              {t('addOrder.productsImmutable')}
             </p>
           ) : (
             <>
               <p className="text-muted" style={{ fontSize: 12, marginBottom: 8 }}>
-                يتم تحديد المورد تلقائياً حسب كل منتج، ويُقسَّم الطلب على الموردين عند الحاجة.
+                {t('addOrder.autoSplitHint')}
               </p>
               <div className="order-products-list">
                 <div
                   className="order-product-row"
                   style={{ background: 'var(--gray-50)', fontSize: 12, fontWeight: 700, color: 'var(--gray-600)' }}
                 >
-                  <span>المنتج / المورد</span><span>الكمية</span><span>السعر</span><span>الإجمالي</span><span></span>
+                  <span>{t('addOrder.productVendorHeader')}</span><span>{t('common.quantity')}</span><span>{t('common.price')}</span><span>{t('common.total')}</span><span></span>
                 </div>
                 {rows.map((r) => {
                   const prod = productById.get(r.productId);
@@ -277,10 +279,10 @@ export default function AddOrderPage() {
                           value={r.productId}
                           onChange={(e) => setRow(r.key, { productId: e.target.value })}
                         >
-                          <option value="">-- اختر منتج --</option>
+                          <option value="">{t('addOrder.selectProductOption')}</option>
                           {lists.products.map((p) => (
                             <option key={p.id} value={p.id}>
-                              {p.nameAr || p.name} {p.stock !== undefined ? `(متوفر: ${p.stock})` : ''}
+                              {p.nameAr || p.name} {p.stock !== undefined ? t('addOrder.stockAvailable', { count: p.stock }) : ''}
                             </option>
                           ))}
                         </select>
@@ -313,18 +315,18 @@ export default function AddOrderPage() {
                 style={{ marginTop: 10, width: '100%', border: '1px dashed var(--gray-300)' }}
                 onClick={() => setRows((rs) => [...rs, newRow()])}
               >
-                + إضافة منتج آخر
+                + {t('addOrder.addAnotherProduct')}
               </button>
 
               {vendorGroups.length > 1 && (
                 <div className="card" style={{ marginTop: 14, background: 'var(--gray-50)' }}>
                   <div className="card-body" style={{ padding: 12 }}>
                     <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--gray-600)', marginBottom: 6 }}>
-                      <i className="fa-solid fa-code-branch" aria-hidden="true" /> تقسيم الطلب حسب المورد ({vendorGroups.length} موردين)
+                      <i className="fa-solid fa-code-branch" aria-hidden="true" /> {t('addOrder.splitByVendor', { count: vendorGroups.length })}
                     </div>
                     {vendorGroups.map((g, i) => (
                       <div key={i} className="total-row" style={{ fontSize: 13 }}>
-                        <span><i className="fa-solid fa-store" aria-hidden="true" /> {g.name} <span className="text-muted">({g.items} صنف)</span></span>
+                        <span><i className="fa-solid fa-store" aria-hidden="true" /> {g.name} <span className="text-muted">{t('addOrder.itemCount', { count: g.items })}</span></span>
                         <span>{formatCurrency(g.subtotal)}</span>
                       </div>
                     ))}
@@ -335,20 +337,20 @@ export default function AddOrderPage() {
           )}
 
           <div className="order-totals">
-            <div className="total-row"><span>المجموع الجزئي</span><span>{formatCurrency(subtotal)}</span></div>
-            <div className="total-row"><span>الضريبة</span><span>{formatCurrency(tax)}</span></div>
-            <div className="total-row"><span>رسوم التوصيل</span><span>{formatCurrency(Number(form.deliveryFee) || 0)}</span></div>
-            <div className="total-row grand-total"><span>الإجمالي الكلي</span><span>{formatCurrency(grand)}</span></div>
+            <div className="total-row"><span>{t('addOrder.subtotal')}</span><span>{formatCurrency(subtotal)}</span></div>
+            <div className="total-row"><span>{t('addOrder.tax')}</span><span>{formatCurrency(tax)}</span></div>
+            <div className="total-row"><span>{t('addOrder.deliveryFeeLabel')}</span><span>{formatCurrency(Number(form.deliveryFee) || 0)}</span></div>
+            <div className="total-row grand-total"><span>{t('addOrder.grandTotal')}</span><span>{formatCurrency(grand)}</span></div>
           </div>
         </div>
       </div>
 
       <div className="card" style={{ marginTop: 16 }}>
-        <div className="card-header"><h3>ملاحظات</h3></div>
+        <div className="card-header"><h3>{t('common.notes')}</h3></div>
         <div className="card-body">
           <div className="form-group" style={{ marginBottom: 0 }}>
             <textarea
-              placeholder="أي ملاحظات خاصة بالطلب..." value={form.notes}
+              placeholder={t('addOrder.notesPlaceholder')} value={form.notes}
               onChange={(e) => setForm({ ...form, notes: e.target.value })}
             />
           </div>
@@ -356,9 +358,9 @@ export default function AddOrderPage() {
       </div>
 
       <div style={{ marginTop: 20, display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
-        <button className="btn btn-secondary" onClick={() => navigate('/orders')}>إلغاء</button>
+        <button className="btn btn-secondary" onClick={() => navigate('/orders')}>{t('common.cancel')}</button>
         <button className="btn btn-primary btn-lg" onClick={save} disabled={submitting}>
-          {submitting ? 'جارٍ الحفظ…' : editMode ? 'حفظ التعديلات' : 'إنشاء الطلب'}
+          {submitting ? t('common.saving') : editMode ? t('addOrder.saveChanges') : t('addOrder.createOrder')}
         </button>
       </div>
     </div>

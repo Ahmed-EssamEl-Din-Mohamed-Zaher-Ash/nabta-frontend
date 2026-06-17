@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import CrudPage from '../components/CrudPage.jsx';
 import ExcelImportModal from '../components/ExcelImportModal.jsx';
 import { formatCurrency } from '../utils/format.js';
@@ -6,19 +7,20 @@ import { formatCurrency } from '../utils/format.js';
 // Backend guards: create/update/delete are admin-only (legacy UI also allowed
 // sales, but the API would reject with 403 — backend rules win).
 export default function ProductsPage() {
+  const { t } = useTranslation();
   const [importing, setImporting] = useState(null); // { refresh } when open
 
   return (
     <>
       {importing && (
         <ExcelImportModal
-          title="استيراد المنتجات من Excel"
+          title={t('products.importTitle')}
           bulkEndpoint="/api/products/bulk"
           mapperName="mapExcelRowToProduct"
           templateName="downloadProductsTemplate"
           needsVendors
-          itemNoun="منتج"
-          columnsHint="الأعمدة المدعومة: اسم المنتج، الفئة، السعر، الوحدة، المخزون، المورد (يجب أن يطابق اسم مورد موجود)"
+          itemNoun={t('products.itemNoun')}
+          columnsHint={t('products.columnsHint')}
           onClose={() => setImporting(null)}
           onImported={importing.refresh}
         />
@@ -26,27 +28,27 @@ export default function ProductsPage() {
     <CrudPage
       toolbarExtra={({ refresh }) => (
         <button className="btn btn-secondary" onClick={() => setImporting({ refresh })}>
-          <i className="fa-solid fa-file-excel" aria-hidden="true" /> استيراد Excel
+          <i className="fa-solid fa-file-excel" aria-hidden="true" /> {t('products.importExcel')}
         </button>
       )}
       entity="products"
       listKey="products"
-      countLabel={(n) => `${n} منتج`}
-      addLabel="+ إضافة منتج"
-      modalTitles={{ add: 'إضافة منتج جديد', edit: 'تعديل المنتج' }}
+      countLabel={(n) => t('products.count', { count: n })}
+      addLabel={t('products.add')}
+      modalTitles={{ add: t('products.addTitle'), edit: t('products.editTitle') }}
       messages={{
-        added: 'تم إضافة المنتج',
-        updated: 'تم تعديل المنتج',
-        deleted: 'تم حذف المنتج',
-        confirmTitle: 'حذف المنتج',
-        confirmText: 'هل تريد حذف هذا المنتج؟',
+        added: t('products.added'),
+        updated: t('products.updated'),
+        deleted: t('products.deleted'),
+        confirmTitle: t('products.confirmTitle'),
+        confirmText: t('products.confirmText'),
       }}
       editRoles={['admin']}
       deleteRoles={['admin']}
       lookups={{ vendors: 'vendors' }}
       columns={[
         {
-          header: 'اسم المنتج',
+          header: t('products.name'),
           render: (p) => (
             <>
               <strong>{p.nameAr || p.name}</strong>
@@ -55,32 +57,32 @@ export default function ProductsPage() {
             </>
           ),
         },
-        { header: 'الفئة', render: (p) => <span className="badge badge-active">{p.category}</span> },
-        { header: 'السعر', render: (p) => formatCurrency(p.price) },
-        { header: 'الوحدة', render: (p) => p.unit },
+        { header: t('products.category'), render: (p) => <span className="badge badge-active">{p.category}</span> },
+        { header: t('common.price'), render: (p) => formatCurrency(p.price) },
+        { header: t('products.unit'), render: (p) => p.unit },
         {
-          header: 'المخزون',
+          header: t('products.stock'),
           render: (p) => <span className={`${p.stock > 20 ? 'text-green' : 'text-red'} fw-bold`}>{p.stock}</span>,
         },
-        { header: 'المورد', render: (p) => p.vendor?.nameAr || p.vendor?.name || '-' },
+        { header: t('common.vendor'), render: (p) => p.vendor?.nameAr || p.vendor?.name || '-' },
       ]}
       fields={[
-        { name: 'nameAr', label: 'الاسم بالعربي', required: true, half: true, placeholder: 'اسم المنتج بالعربي' },
-        { name: 'name', label: 'الاسم بالإنجليزي', half: true, placeholder: 'Product name in English' },
-        { name: 'category', label: 'الفئة', required: true, half: true, placeholder: 'مثال: أسمدة، بذور، معدات' },
-        { name: 'unit', label: 'الوحدة', required: true, half: true, placeholder: 'مثال: كيس 25 كجم، حبة، لتر' },
-        { name: 'price', label: 'السعر (د.إ)', type: 'number', step: '0.01', required: true, half: true },
-        { name: 'stock', label: 'المخزون', type: 'number', default: 0, half: true },
+        { name: 'nameAr', label: t('products.nameAr'), required: true, half: true, placeholder: t('products.nameArPlaceholder') },
+        { name: 'name', label: t('products.nameEn'), half: true, placeholder: 'Product name in English' },
+        { name: 'category', label: t('products.category'), required: true, half: true, placeholder: t('products.categoryPlaceholder') },
+        { name: 'unit', label: t('products.unit'), required: true, half: true, placeholder: t('products.unitPlaceholder') },
+        { name: 'price', label: t('products.priceLabel'), type: 'number', step: '0.01', required: true, half: true },
+        { name: 'stock', label: t('products.stock'), type: 'number', default: 0, half: true },
         {
           name: 'vendorId',
-          label: 'المورد',
+          label: t('common.vendor'),
           type: 'select',
           required: true, // vendorId is a required FK in the Prisma schema
           lookup: 'vendors',
           optionLabel: (v) => v.nameAr || v.name,
-          placeholder: '-- اختر مورد --',
+          placeholder: t('products.vendorPlaceholder'),
         },
-        { name: 'description', label: 'الوصف', type: 'textarea' },
+        { name: 'description', label: t('products.description'), type: 'textarea' },
       ]}
       toPayload={(v) => ({
         nameAr: v.nameAr.trim(),

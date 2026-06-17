@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import L from '../utils/leafletSetup.js';
 import Modal from './Modal.jsx';
 import { useToast } from './ToastHost.jsx';
@@ -11,6 +12,7 @@ const DUBAI_CENTER = [25.2048, 55.2708];
  * onPick receives { lat, lng, address }.
  */
 export default function MapPickerModal({ initial, onPick, onClose }) {
+  const { t } = useTranslation();
   const showToast = useToast();
   const mapElRef = useRef(null);
   const mapRef = useRef(null);
@@ -73,10 +75,10 @@ export default function MapPickerModal({ initial, onPick, onClose }) {
       if (data?.length) {
         place(parseFloat(data[0].lat), parseFloat(data[0].lon), data[0].display_name);
       } else {
-        showToast('لم يتم العثور على الموقع، جرب كلمات أخرى', 'error');
+        showToast(t('map.notFound'), 'error');
       }
     } catch {
-      showToast('خطأ في البحث، تأكد من الاتصال بالإنترنت', 'error');
+      showToast(t('map.searchError'), 'error');
     } finally {
       setSearching(false);
     }
@@ -84,32 +86,32 @@ export default function MapPickerModal({ initial, onPick, onClose }) {
 
   function useMyLocation() {
     if (!navigator.geolocation) {
-      showToast('المتصفح لا يدعم تحديد الموقع', 'error');
+      showToast(t('map.geolocationUnsupported'), 'error');
       return;
     }
     navigator.geolocation.getCurrentPosition(
       (pos) => place(pos.coords.latitude, pos.coords.longitude),
-      () => showToast('لم يتم السماح بالوصول للموقع', 'error')
+      () => showToast(t('map.locationDenied'), 'error')
     );
   }
 
   return (
     <Modal
-      title="اختيار الموقع من الخريطة"
+      title={t('map.title')}
       size="xl"
       onClose={onClose}
       footer={
         <>
-          <button className="btn btn-secondary" onClick={onClose}>إلغاء</button>
+          <button className="btn btn-secondary" onClick={onClose}>{t('common.cancel')}</button>
           <button
             className="btn btn-primary"
             disabled={!selected}
             onClick={() => {
               onPick(selected);
-              showToast('تم حفظ الموقع', 'success');
+              showToast(t('common.locationSet'), 'success');
             }}
           >
-            تأكيد الموقع
+            {t('map.confirmLocation')}
           </button>
         </>
       }
@@ -117,28 +119,28 @@ export default function MapPickerModal({ initial, onPick, onClose }) {
       <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
         <input
           type="text"
-          placeholder="ابحث عن منطقة أو شارع..."
+          placeholder={t('map.searchPlaceholder')}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && search()}
           style={{ flex: 1 }}
         />
         <button className="btn btn-secondary" onClick={search} disabled={searching}>
-          {searching ? '...' : 'بحث'}
+          {searching ? '...' : t('common.search')}
         </button>
-        <button className="btn btn-secondary" onClick={useMyLocation} title="استخدام موقعي الحالي">
-          <i className="fa-solid fa-location-crosshairs" aria-hidden="true" /> موقعي
+        <button className="btn btn-secondary" onClick={useMyLocation} title={t('map.useMyLocationTitle')}>
+          <i className="fa-solid fa-location-crosshairs" aria-hidden="true" /> {t('map.myLocation')}
         </button>
       </div>
       <div ref={mapElRef} style={{ height: 380, borderRadius: 8 }} />
       <div style={{ marginTop: 10, fontSize: 13, color: 'var(--gray-600)' }}>
         {selected ? (
           <>
-            <strong><i className="fa-solid fa-location-dot" aria-hidden="true" /> الإحداثيات:</strong>{' '}
-            خط العرض: {selected.lat.toFixed(6)} | خط الطول: {selected.lng.toFixed(6)}
+            <strong><i className="fa-solid fa-location-dot" aria-hidden="true" /> {t('map.coordinates')}:</strong>{' '}
+            {t('map.latLng', { lat: selected.lat.toFixed(6), lng: selected.lng.toFixed(6) })}
           </>
         ) : (
-          'انقر على الخريطة لتحديد الموقع'
+          t('map.clickToSelect')
         )}
       </div>
     </Modal>

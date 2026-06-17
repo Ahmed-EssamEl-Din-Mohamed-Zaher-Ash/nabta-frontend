@@ -1,16 +1,17 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import api, { apiErrorMessage } from '../api/client.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useToast } from '../components/ToastHost.jsx';
-import { ROLE_LABELS, REPORT_ROLES } from '../constants/permissions.js';
+import { REPORT_ROLES } from '../constants/permissions.js';
 import { formatCurrency, orderTotals } from '../utils/format.js';
 import StatusBadge from '../components/StatusBadge.jsx';
 import OrderDetailsModal from '../components/OrderDetailsModal.jsx';
 
 // Per-role stat cards — same labels/colors/icons as legacy statsMap,
 // computed from GET /api/reports/dashboard (counts + financials).
-function buildStats(role, counts, financials, customersCount) {
+function buildStats(t, role, counts, financials, customersCount) {
   const c = counts;
   // Roles outside REPORT_ROLES have no financials; the map below evaluates
   // every role branch eagerly, so null must not reach f.totalRevenue.
@@ -19,47 +20,48 @@ function buildStats(role, counts, financials, customersCount) {
 
   const map = {
     admin: [
-      card('fa-clipboard-list', 'إجمالي الطلبات', c.total, 'var(--blue)', 'var(--blue-light)'),
-      card('fa-bell', 'طلبات جديدة', c.new, 'var(--orange)', 'var(--orange-light)'),
-      card('fa-truck', 'في التوصيل', c.out, 'var(--purple)', 'var(--purple-light)'),
-      card('fa-check', 'تم التسليم', c.delivered, 'var(--green-600)', 'var(--green-100)'),
-      card('fa-coins', 'الإيراد الكلي', formatCurrency(f.totalRevenue), 'var(--green-700)', 'var(--green-100)'),
-      card('fa-hourglass-half', 'مستحق للموردين', formatCurrency(f.pendingPayment), 'var(--red)', 'var(--red-light)'),
+      card('fa-clipboard-list', t('dashboard.stats.totalOrders'), c.total, 'var(--blue)', 'var(--blue-light)'),
+      card('fa-bell', t('dashboard.stats.newOrders'), c.new, 'var(--orange)', 'var(--orange-light)'),
+      card('fa-truck', t('dashboard.stats.inDelivery'), c.out, 'var(--purple)', 'var(--purple-light)'),
+      card('fa-check', t('dashboard.stats.delivered'), c.delivered, 'var(--green-600)', 'var(--green-100)'),
+      card('fa-coins', t('dashboard.stats.totalRevenue'), formatCurrency(f.totalRevenue), 'var(--green-700)', 'var(--green-100)'),
+      card('fa-hourglass-half', t('dashboard.stats.dueToVendors'), formatCurrency(f.pendingPayment), 'var(--red)', 'var(--red-light)'),
     ],
     sales: [
-      card('fa-clipboard-list', 'طلباتي', c.new + c.confirmed, 'var(--blue)', 'var(--blue-light)'),
-      card('fa-bell', 'جديدة', c.new, 'var(--orange)', 'var(--orange-light)'),
-      card('fa-check', 'مؤكدة', c.confirmed, 'var(--green-600)', 'var(--green-100)'),
-      card('fa-users', 'عملاء', customersCount, 'var(--purple)', 'var(--purple-light)'),
+      card('fa-clipboard-list', t('dashboard.stats.myOrders'), c.new + c.confirmed, 'var(--blue)', 'var(--blue-light)'),
+      card('fa-bell', t('dashboard.stats.new'), c.new, 'var(--orange)', 'var(--orange-light)'),
+      card('fa-check', t('dashboard.stats.confirmed'), c.confirmed, 'var(--green-600)', 'var(--green-100)'),
+      card('fa-users', t('dashboard.stats.customers'), customersCount, 'var(--purple)', 'var(--purple-light)'),
     ],
     account: [
-      card('fa-box', 'قيد المتابعة', c.confirmed + c.preparing + c.ready, 'var(--blue)', 'var(--blue-light)'),
-      card('fa-check', 'مؤكدة', c.confirmed, 'var(--orange)', 'var(--orange-light)'),
-      card('fa-screwdriver-wrench', 'جاري التحضير', c.preparing, 'var(--yellow)', 'var(--yellow-light)'),
-      card('fa-box', 'جاهزة', c.ready, 'var(--green-600)', 'var(--green-100)'),
+      card('fa-box', t('dashboard.stats.inProgress'), c.confirmed + c.preparing + c.ready, 'var(--blue)', 'var(--blue-light)'),
+      card('fa-check', t('dashboard.stats.confirmed'), c.confirmed, 'var(--orange)', 'var(--orange-light)'),
+      card('fa-screwdriver-wrench', t('dashboard.stats.preparing'), c.preparing, 'var(--yellow)', 'var(--yellow-light)'),
+      card('fa-box', t('dashboard.stats.ready'), c.ready, 'var(--green-600)', 'var(--green-100)'),
     ],
     ops: [
-      card('fa-box', 'جاهزة للتوصيل', c.ready, 'var(--blue)', 'var(--blue-light)'),
-      card('fa-truck', 'في الطريق', c.out, 'var(--orange)', 'var(--orange-light)'),
-      card('fa-check', 'تم التسليم', c.delivered, 'var(--green-600)', 'var(--green-100)'),
-      card('fa-xmark', 'فشل التسليم', c.failed, 'var(--red)', 'var(--red-light)'),
+      card('fa-box', t('dashboard.stats.readyForDelivery'), c.ready, 'var(--blue)', 'var(--blue-light)'),
+      card('fa-truck', t('dashboard.stats.onTheWay'), c.out, 'var(--orange)', 'var(--orange-light)'),
+      card('fa-check', t('dashboard.stats.delivered'), c.delivered, 'var(--green-600)', 'var(--green-100)'),
+      card('fa-xmark', t('dashboard.stats.deliveryFailed'), c.failed, 'var(--red)', 'var(--red-light)'),
     ],
     finance: [
-      card('fa-hourglass-half', 'بانتظار الدفع', c.delivered, 'var(--orange)', 'var(--orange-light)'),
-      card('fa-check', 'تم الدفع', c.paid, 'var(--green-600)', 'var(--green-100)'),
-      card('fa-coins', 'مستحق للموردين', formatCurrency(f.pendingPayment), 'var(--red)', 'var(--red-light)'),
+      card('fa-hourglass-half', t('dashboard.stats.awaitingPayment'), c.delivered, 'var(--orange)', 'var(--orange-light)'),
+      card('fa-check', t('dashboard.stats.paid'), c.paid, 'var(--green-600)', 'var(--green-100)'),
+      card('fa-coins', t('dashboard.stats.dueToVendors'), formatCurrency(f.pendingPayment), 'var(--red)', 'var(--red-light)'),
       // paid total = revenue of (delivered+paid) minus revenue still pending (delivered)
-      card('fa-money-bill-wave', 'إجمالي المدفوع', formatCurrency(f.totalRevenue - f.pendingPayment), 'var(--blue)', 'var(--blue-light)'),
+      card('fa-money-bill-wave', t('dashboard.stats.totalPaid'), formatCurrency(f.totalRevenue - f.pendingPayment), 'var(--blue)', 'var(--blue-light)'),
     ],
     driver: [
-      card('fa-truck', 'طلباتي اليوم', c.out, 'var(--orange)', 'var(--orange-light)'),
-      card('fa-check', 'تم تسليمها', c.delivered, 'var(--green-600)', 'var(--green-100)'),
+      card('fa-truck', t('dashboard.stats.myOrdersToday'), c.out, 'var(--orange)', 'var(--orange-light)'),
+      card('fa-check', t('dashboard.stats.deliveredCount'), c.delivered, 'var(--green-600)', 'var(--green-100)'),
     ],
   };
   return map[role] || map.admin;
 }
 
 export default function DashboardPage() {
+  const { t } = useTranslation();
   const { user, role } = useAuth();
   const showToast = useToast();
   const navigate = useNavigate();
@@ -80,7 +82,7 @@ export default function DashboardPage() {
       const requests = [api.get('/api/reports/dashboard')];
       if (role === 'sales') requests.push(api.get('/api/customers'));
       const [dash, cust] = await Promise.all(requests);
-      return buildStats(role, dash.data.counts, dash.data.financials, cust?.data.customers.length ?? 0);
+      return buildStats(t, role, dash.data.counts, dash.data.financials, cust?.data.customers.length ?? 0);
     }
     // ops/driver are blocked from /api/reports/* — count their cards from
     // status-filtered orders queries instead. A driver's list is already
@@ -90,7 +92,7 @@ export default function DashboardPage() {
       statuses.map((status) => api.get('/api/orders', { params: { status, limit: 1 } }))
     );
     const counts = Object.fromEntries(statuses.map((s, i) => [s, results[i].data.pagination.total]));
-    return buildStats(role, counts, null, 0);
+    return buildStats(t, role, counts, null, 0);
   }
 
   async function load() {
@@ -119,9 +121,9 @@ export default function DashboardPage() {
     <>
       <div style={{ marginBottom: 8 }}>
         <h2 style={{ fontSize: 20, fontWeight: 800, color: 'var(--gray-800)' }}>
-          مرحباً، {user?.name} <i className="fa-solid fa-hand" aria-hidden="true" />
+          {t('dashboard.greeting', { name: user?.name })} <i className="fa-solid fa-hand" aria-hidden="true" />
         </h2>
-        <p style={{ color: 'var(--gray-500)', fontSize: 13 }}>{ROLE_LABELS[role]} — لوحة التحكم</p>
+        <p style={{ color: 'var(--gray-500)', fontSize: 13 }}>{t('dashboard.roleSubtitle', { role: t(`roles.${role}`) })}</p>
       </div>
 
       {loading ? (
@@ -146,17 +148,17 @@ export default function DashboardPage() {
 
       <div className="card">
         <div className="card-header">
-          <h3>آخر الطلبات</h3>
-          <button className="btn btn-secondary btn-sm" onClick={() => navigate('/orders')}>عرض الكل</button>
+          <h3>{t('dashboard.recentOrders')}</h3>
+          <button className="btn btn-secondary btn-sm" onClick={() => navigate('/orders')}>{t('dashboard.viewAll')}</button>
         </div>
         <div className="table-wrapper">
           <table>
             <thead>
-              <tr><th>رقم الطلب</th><th>العميل</th><th>الحالة</th><th>الإجمالي</th><th>التاريخ</th><th>إجراءات</th></tr>
+              <tr><th>{t('dashboard.orderNumber')}</th><th>{t('common.customer')}</th><th>{t('common.status')}</th><th>{t('common.total')}</th><th>{t('common.date')}</th><th>{t('common.actions')}</th></tr>
             </thead>
             <tbody>
               {recent.length === 0 ? (
-                <tr><td colSpan={6}><div className="empty-state" style={{ padding: 20 }}><p>لا توجد طلبات</p></div></td></tr>
+                <tr><td colSpan={6}><div className="empty-state" style={{ padding: 20 }}><p>{t('dashboard.noOrders')}</p></div></td></tr>
               ) : (
                 recent.map((o) => (
                   <tr key={o.id}>
@@ -166,7 +168,7 @@ export default function DashboardPage() {
                     <td>{formatCurrency(orderTotals(o).total)}</td>
                     <td>{o.date}</td>
                     <td>
-                      <button className="btn btn-info btn-sm" onClick={() => setViewedId(o.id)}>عرض</button>
+                      <button className="btn btn-info btn-sm" onClick={() => setViewedId(o.id)}>{t('common.view')}</button>
                     </td>
                   </tr>
                 ))

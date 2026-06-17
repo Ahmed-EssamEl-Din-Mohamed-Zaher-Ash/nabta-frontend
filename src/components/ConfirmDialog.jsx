@@ -1,5 +1,8 @@
 // Legacy-styled confirmation dialog (#confirm-overlay / .confirm-box from confirm.css)
+import { useTranslation } from 'react-i18next';
+
 export default function ConfirmDialog({ title, text, onConfirm, onCancel }) {
+  const { t } = useTranslation();
   return (
     <div id="confirm-overlay" className="active">
       <div className="confirm-box">
@@ -15,8 +18,8 @@ export default function ConfirmDialog({ title, text, onConfirm, onCancel }) {
         <h3>{title}</h3>
         <p>{text}</p>
         <div className="confirm-actions">
-          <button className="btn btn-secondary" onClick={onCancel}>إلغاء</button>
-          <button className="btn btn-danger" onClick={onConfirm}>حذف</button>
+          <button className="btn btn-secondary" onClick={onCancel}>{t('common.cancel')}</button>
+          <button className="btn btn-danger" onClick={onConfirm}>{t('common.delete')}</button>
         </div>
       </div>
     </div>

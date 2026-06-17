@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import api, { apiErrorMessage } from '../api/client.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useToast } from './ToastHost.jsx';
-import { STATUS_LABELS } from '../constants/permissions.js';
-import { PAYMENT_METHOD_LABELS, PAYMENT_STATUS_LABELS } from '../constants/payments.js';
 import { formatCurrency, orderTotals } from '../utils/format.js';
 import Modal from './Modal.jsx';
 import RoleGate from './RoleGate.jsx';
@@ -20,8 +19,11 @@ function itemVendorName(it) {
   return v ? v.nameAr || v.name : '-';
 }
 
-const NOTIF_TYPE_LABELS = { invoice: 'فاتورة', order_confirmation: 'تأكيد طلب', vendor_notice: 'إشعار مورد', payment_link: 'رابط دفع' };
-const NOTIF_STATUS_LABELS = { sent: 'تم الإرسال ✅', failed: 'فشل ❌', link_generated: 'رابط جاهز' };
+// i18n key suffixes for the customer-payment vocabulary maps.
+const PAYMENT_METHOD_KEYS = { cod: 'cod', online: 'online' };
+const PAYMENT_STATUS_KEYS = { unpaid: 'unpaid', pending: 'pending', paid: 'paid', failed: 'failed', cancelled: 'cancelled' };
+const NOTIF_TYPE_KEYS = { invoice: 'invoice', order_confirmation: 'orderConfirmation', vendor_notice: 'vendorNotice', payment_link: 'paymentLink' };
+const NOTIF_STATUS_KEYS = { sent: 'sent', failed: 'failed', link_generated: 'linkGenerated' };
 
 const TRAIL_STEPS = ['new', 'confirmed', 'preparing', 'ready', 'out', 'delivered', 'paid'];
 const CHECK_SVG = (
@@ -31,6 +33,7 @@ const CHECK_SVG = (
 );
 
 function AssignDriverModal({ order, onClose, onSaved }) {
+  const { t } = useTranslation();
   const showToast = useToast();
   const [lists, setLists] = useState(null);
   const [form, setForm] = useState({
@@ -52,7 +55,7 @@ function AssignDriverModal({ order, onClose, onSaved }) {
         vehicleId: form.vehicleId || null,
         routeId: form.routeId || null,
       });
-      showToast('تم تعيين السائق', 'success');
+      showToast(t('orderDetails.driverAssigned'), 'success');
       onSaved();
     } catch (err) {
       showToast(apiErrorMessage(err), 'error');
@@ -61,12 +64,12 @@ function AssignDriverModal({ order, onClose, onSaved }) {
 
   return (
     <Modal
-      title={`تعيين سائق للطلب ${order.orderNumber}`}
+      title={t('orderDetails.assignDriverTitle', { number: order.orderNumber })}
       onClose={onClose}
       footer={
         <>
-          <button className="btn btn-secondary" onClick={onClose}>إلغاء</button>
-          <button className="btn btn-primary" onClick={save} disabled={!lists}>حفظ</button>
+          <button className="btn btn-secondary" onClick={onClose}>{t('common.cancel')}</button>
+          <button className="btn btn-primary" onClick={save} disabled={!lists}>{t('common.save')}</button>
         </>
       }
     >
@@ -75,23 +78,23 @@ function AssignDriverModal({ order, onClose, onSaved }) {
       ) : (
         <>
           <div className="form-group">
-            <label>السائق</label>
+            <label>{t('common.driver')}</label>
             <select value={form.driverId} onChange={(e) => setForm({ ...form, driverId: e.target.value })}>
-              <option value="">-- اختر سائق --</option>
+              <option value="">{t('orderDetails.selectDriver')}</option>
               {lists.drivers.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
             </select>
           </div>
           <div className="form-group">
-            <label>المركبة</label>
+            <label>{t('orderDetails.vehicle')}</label>
             <select value={form.vehicleId} onChange={(e) => setForm({ ...form, vehicleId: e.target.value })}>
-              <option value="">-- اختر مركبة --</option>
+              <option value="">{t('orderDetails.selectVehicle')}</option>
               {lists.vehicles.map((v) => <option key={v.id} value={v.id}>{v.plate} - {v.model}</option>)}
             </select>
           </div>
           <div className="form-group">
-            <label>المسار</label>
+            <label>{t('orderDetails.route')}</label>
             <select value={form.routeId} onChange={(e) => setForm({ ...form, routeId: e.target.value })}>
-              <option value="">-- اختر مسار --</option>
+              <option value="">{t('orderDetails.selectRoute')}</option>
               {lists.routes.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
             </select>
           </div>
@@ -102,6 +105,7 @@ function AssignDriverModal({ order, onClose, onSaved }) {
 }
 
 function AssignAccountModal({ order, onClose, onSaved }) {
+  const { t } = useTranslation();
   const showToast = useToast();
   const [managers, setManagers] = useState(null);
   const [accountId, setAccountId] = useState(order.accountId || '');
@@ -115,7 +119,7 @@ function AssignAccountModal({ order, onClose, onSaved }) {
   async function save() {
     try {
       await api.patch(`/api/orders/${order.id}/assignment`, { accountId: accountId || null });
-      showToast(accountId ? 'تم تحويل الطلب إلى المسؤول' : 'تم إلغاء التحويل', 'success');
+      showToast(accountId ? t('orderDetails.orderTransferred') : t('orderDetails.transferCancelled'), 'success');
       onSaved();
     } catch (err) {
       showToast(apiErrorMessage(err), 'error');
@@ -124,12 +128,12 @@ function AssignAccountModal({ order, onClose, onSaved }) {
 
   return (
     <Modal
-      title={`تحويل الطلب ${order.orderNumber} إلى مسؤول حسابات`}
+      title={t('orderDetails.assignAccountTitle', { number: order.orderNumber })}
       onClose={onClose}
       footer={
         <>
-          <button className="btn btn-secondary" onClick={onClose}>إلغاء</button>
-          <button className="btn btn-primary" onClick={save} disabled={!managers}>حفظ التحويل</button>
+          <button className="btn btn-secondary" onClick={onClose}>{t('common.cancel')}</button>
+          <button className="btn btn-primary" onClick={save} disabled={!managers}>{t('orderDetails.saveTransfer')}</button>
         </>
       }
     >
@@ -137,13 +141,13 @@ function AssignAccountModal({ order, onClose, onSaved }) {
         <div className="loading"><div className="spinner" /></div>
       ) : (
         <div className="form-group">
-          <label>مسؤول الحسابات التجارية</label>
+          <label>{t('orderDetails.accountManager')}</label>
           <select value={accountId} onChange={(e) => setAccountId(e.target.value)}>
-            <option value="">— بدون / إلغاء التحويل —</option>
+            <option value="">{t('orderDetails.noneCancelTransfer')}</option>
             {managers.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
           </select>
           <div className="text-muted" style={{ fontSize: 12, marginTop: 6 }}>
-            سيظهر الطلب فقط لمسؤول الحسابات المحوَّل إليه.
+            {t('orderDetails.transferHint')}
           </div>
         </div>
       )}
@@ -158,6 +162,7 @@ function AssignAccountModal({ order, onClose, onSaved }) {
  * the parent can refetch.
  */
 export default function OrderDetailsModal({ order, onClose, onChanged }) {
+  const { t } = useTranslation();
   const { role } = useAuth();
   const showToast = useToast();
   const [assigning, setAssigning] = useState(false);
@@ -169,6 +174,11 @@ export default function OrderDetailsModal({ order, onClose, onChanged }) {
   const { subtotal, taxRate, tax, deliveryFee, total } = orderTotals(o);
   const vendors = orderVendors(o);
   const [notifications, setNotifications] = useState([]);
+
+  const paymentMethodLabel = (m) => (PAYMENT_METHOD_KEYS[m] ? t(`orderDetails.paymentMethod.${PAYMENT_METHOD_KEYS[m]}`) : m || '-');
+  const paymentStatusLabel = (s) => (PAYMENT_STATUS_KEYS[s] ? t(`orderDetails.paymentStatus.${PAYMENT_STATUS_KEYS[s]}`) : s || '-');
+  const notifTypeLabel = (ty) => (NOTIF_TYPE_KEYS[ty] ? t(`orderDetails.notifType.${NOTIF_TYPE_KEYS[ty]}`) : ty);
+  const notifStatusLabel = (st) => (NOTIF_STATUS_KEYS[st] ? t(`orderDetails.notifStatus.${NOTIF_STATUS_KEYS[st]}`) : st);
 
   async function reloadNotifs() {
     try {
@@ -197,9 +207,9 @@ export default function OrderDetailsModal({ order, onClose, onChanged }) {
   }
 
   function markPaid() {
-    const proof = window.prompt('أدخل رقم إثبات التحويل:');
+    const proof = window.prompt(t('orderDetails.transferProofPrompt'));
     if (proof === null) return;
-    patchStatus({ status: 'paid', paymentProof: proof || 'تم' }, 'تم تسجيل الدفع للمورد');
+    patchStatus({ status: 'paid', paymentProof: proof || t('orderDetails.proofDone') }, t('orderDetails.vendorPaymentRecorded'));
   }
 
   // Open the printable hosted invoice (ensures it exists first).
@@ -221,9 +231,9 @@ export default function OrderDetailsModal({ order, onClose, onChanged }) {
     try {
       const { data } = await api.post(`/api/orders/${o.id}/invoice/send`);
       if (data.email?.attempted) {
-        showToast(data.email.ok ? 'تم إرسال الفاتورة بالبريد الإلكتروني' : 'تعذّر إرسال البريد', data.email.ok ? 'success' : 'error');
+        showToast(data.email.ok ? t('orderDetails.invoiceEmailed') : t('orderDetails.emailFailed'), data.email.ok ? 'success' : 'error');
       } else {
-        showToast('لا يوجد بريد إلكتروني للعميل', 'error');
+        showToast(t('orderDetails.noCustomerEmail'), 'error');
       }
       if (data.waLink) window.open(data.waLink, '_blank');
       reloadNotifs();
@@ -240,7 +250,7 @@ export default function OrderDetailsModal({ order, onClose, onChanged }) {
     try {
       const { data } = await api.post(`/api/orders/${o.id}/notify-vendors`);
       const n = data.results?.length || 0;
-      showToast(n ? `تم تجهيز إشعارات ${n} مورد` : 'لا يوجد موردون للإشعار', n ? 'success' : 'error');
+      showToast(n ? t('orderDetails.vendorNoticesReady', { count: n }) : t('orderDetails.noVendorsToNotify'), n ? 'success' : 'error');
       reloadNotifs();
     } catch (err) {
       showToast(apiErrorMessage(err), 'error');
@@ -254,7 +264,7 @@ export default function OrderDetailsModal({ order, onClose, onChanged }) {
     setBusy(true);
     try {
       const { data } = await api.post(`/api/orders/${o.id}/payment`);
-      showToast(data.stub ? 'تم إنشاء رابط دفع تجريبي (Stripe غير مُهيأ بعد)' : 'تم إنشاء رابط الدفع وإرساله', 'success');
+      showToast(data.stub ? t('orderDetails.paymentLinkStub') : t('orderDetails.paymentLinkSent'), 'success');
       if (data.waLink) window.open(data.waLink, '_blank');
       reloadNotifs();
       onChanged();
@@ -270,7 +280,7 @@ export default function OrderDetailsModal({ order, onClose, onChanged }) {
     setBusy(true);
     try {
       await api.post(`/api/orders/${o.id}/payment/simulate`, { status: 'paid' });
-      showToast('تم تعليم الطلب كمدفوع (محاكاة)', 'success');
+      showToast(t('orderDetails.markedPaidSimulated'), 'success');
       onChanged();
       onClose();
     } catch (err) {
@@ -282,7 +292,7 @@ export default function OrderDetailsModal({ order, onClose, onChanged }) {
 
   const footer = (
     <>
-      <button className="btn btn-secondary" onClick={onClose}>إغلاق</button>
+      <button className="btn btn-secondary" onClick={onClose}>{t('common.close')}</button>
       <RoleGate status={o.status}>
         {(action) =>
           // 'paid' has its own button below with payment proof
@@ -290,9 +300,9 @@ export default function OrderDetailsModal({ order, onClose, onChanged }) {
             <button
               className="btn btn-primary"
               disabled={busy}
-              onClick={() => patchStatus({ status: action.next }, `تم تغيير حالة ${o.orderNumber} إلى: ${STATUS_LABELS[action.next]}`)}
+              onClick={() => patchStatus({ status: action.next }, t('orderDetails.statusChanged', { number: o.orderNumber, status: t(`status.${action.next}`) }))}
             >
-              {action.label}
+              {t(`orders.action.${action.next}`)}
             </button>
           )
         }
@@ -301,24 +311,24 @@ export default function OrderDetailsModal({ order, onClose, onChanged }) {
         <button
           className="btn btn-danger"
           disabled={busy}
-          onClick={() => patchStatus({ status: 'failed', failureReason: 'فشل التسليم' }, `تم تسجيل فشل تسليم ${o.orderNumber}`)}
+          onClick={() => patchStatus({ status: 'failed', failureReason: t('orderDetails.deliveryFailedReason') }, t('orderDetails.deliveryFailureRecorded', { number: o.orderNumber }))}
         >
-          فشل التسليم
+          {t('orderDetails.deliveryFailed')}
         </button>
       )}
       {o.status === 'delivered' && ['finance', 'admin'].includes(role) && (
         <button className="btn btn-primary" disabled={busy} onClick={markPaid}>
-          تسجيل الدفع للمورد
+          {t('orderDetails.recordVendorPayment')}
         </button>
       )}
       {o.status === 'ready' && ['ops', 'admin'].includes(role) && (
         <button className="btn btn-warning" onClick={() => setAssigning(true)}>
-          تعيين سائق
+          {t('orderDetails.assignDriver')}
         </button>
       )}
       <RoleGate roles={['sales', 'admin']}>
         <button className="btn btn-secondary" onClick={() => setAssigningAccount(true)}>
-          <i className="fa-solid fa-user-tie" aria-hidden="true" /> تحويل لمدير الحسابات
+          <i className="fa-solid fa-user-tie" aria-hidden="true" /> {t('orderDetails.transferToAccountManager')}
         </button>
       </RoleGate>
     </>
@@ -326,7 +336,7 @@ export default function OrderDetailsModal({ order, onClose, onChanged }) {
 
   return (
     <>
-      <Modal title={`تفاصيل الطلب — ${o.orderNumber}`} size="xl" onClose={onClose} footer={footer}>
+      <Modal title={t('orderDetails.title', { number: o.orderNumber })} size="xl" onClose={onClose} footer={footer}>
         <div className="order-status-trail">
           {TRAIL_STEPS.map((s, i) => {
             let cls = '';
@@ -335,40 +345,40 @@ export default function OrderDetailsModal({ order, onClose, onChanged }) {
             return (
               <div key={s} className={`trail-step ${cls}`}>
                 <div className="trail-dot">{CHECK_SVG}</div>
-                <span className="trail-label">{STATUS_LABELS[s]}</span>
+                <span className="trail-label">{t(`status.${s}`)}</span>
               </div>
             );
           })}
         </div>
 
         <div className="order-info-grid">
-          <div className="order-info-item"><div className="order-info-label">رقم الطلب</div><div className="order-info-value fw-bold">{o.orderNumber}</div></div>
-          <div className="order-info-item"><div className="order-info-label">التاريخ</div><div className="order-info-value">{o.date}</div></div>
-          <div className="order-info-item"><div className="order-info-label">العميل</div><div className="order-info-value">{o.customer?.name || '-'}</div></div>
-          <div className="order-info-item"><div className="order-info-label">هاتف العميل</div><div className="order-info-value">{o.customer?.phone || '-'}</div></div>
-          <div className="order-info-item"><div className="order-info-label">الموردون</div><div className="order-info-value">{vendors.length ? vendors.map((v) => v.nameAr || v.name).join('، ') : '-'}</div></div>
-          <div className="order-info-item"><div className="order-info-label">طريقة الدفع</div><div className="order-info-value">{PAYMENT_METHOD_LABELS[o.paymentMethod] || o.paymentMethod || '-'}</div></div>
-          <div className="order-info-item"><div className="order-info-label">حالة الدفع</div><div className="order-info-value">{PAYMENT_STATUS_LABELS[o.paymentStatus] || o.paymentStatus || '-'}</div></div>
-          <div className="order-info-item"><div className="order-info-label">عنوان التوصيل</div><div className="order-info-value">{o.deliveryAddress || '-'}</div></div>
-          <div className="order-info-item"><div className="order-info-label">السائق</div><div className="order-info-value">{o.driver?.name || 'غير محدد'}</div></div>
-          <div className="order-info-item"><div className="order-info-label">المركبة</div><div className="order-info-value">{o.vehicle?.plate || 'غير محددة'}</div></div>
-          <div className="order-info-item"><div className="order-info-label">المسار</div><div className="order-info-value">{o.route?.name || 'غير محدد'}</div></div>
-          <div className="order-info-item"><div className="order-info-label">المسؤول (مدير الحسابات)</div><div className="order-info-value">{o.account?.name || 'غير محوّل'}</div></div>
-          <div className="order-info-item"><div className="order-info-label">الموقع</div><div className="order-info-value">{o.location?.address || '-'}</div></div>
+          <div className="order-info-item"><div className="order-info-label">{t('orderDetails.orderNumber')}</div><div className="order-info-value fw-bold">{o.orderNumber}</div></div>
+          <div className="order-info-item"><div className="order-info-label">{t('common.date')}</div><div className="order-info-value">{o.date}</div></div>
+          <div className="order-info-item"><div className="order-info-label">{t('common.customer')}</div><div className="order-info-value">{o.customer?.name || '-'}</div></div>
+          <div className="order-info-item"><div className="order-info-label">{t('orderDetails.customerPhone')}</div><div className="order-info-value">{o.customer?.phone || '-'}</div></div>
+          <div className="order-info-item"><div className="order-info-label">{t('orderDetails.vendors')}</div><div className="order-info-value">{vendors.length ? vendors.map((v) => v.nameAr || v.name).join(t('orderDetails.listSeparator')) : '-'}</div></div>
+          <div className="order-info-item"><div className="order-info-label">{t('orderDetails.paymentMethodLabel')}</div><div className="order-info-value">{paymentMethodLabel(o.paymentMethod)}</div></div>
+          <div className="order-info-item"><div className="order-info-label">{t('orderDetails.paymentStatusLabel')}</div><div className="order-info-value">{paymentStatusLabel(o.paymentStatus)}</div></div>
+          <div className="order-info-item"><div className="order-info-label">{t('orderDetails.deliveryAddress')}</div><div className="order-info-value">{o.deliveryAddress || '-'}</div></div>
+          <div className="order-info-item"><div className="order-info-label">{t('common.driver')}</div><div className="order-info-value">{o.driver?.name || t('orderDetails.driverUnassigned')}</div></div>
+          <div className="order-info-item"><div className="order-info-label">{t('orderDetails.vehicle')}</div><div className="order-info-value">{o.vehicle?.plate || t('orderDetails.vehicleUnassigned')}</div></div>
+          <div className="order-info-item"><div className="order-info-label">{t('orderDetails.route')}</div><div className="order-info-value">{o.route?.name || t('orderDetails.routeUnassigned')}</div></div>
+          <div className="order-info-item"><div className="order-info-label">{t('orderDetails.accountManagerInfo')}</div><div className="order-info-value">{o.account?.name || t('orderDetails.notTransferred')}</div></div>
+          <div className="order-info-item"><div className="order-info-label">{t('common.location')}</div><div className="order-info-value">{o.location?.address || '-'}</div></div>
           {o.notes && (
             <div className="order-info-item" style={{ gridColumn: '1/-1' }}>
-              <div className="order-info-label">ملاحظات</div>
+              <div className="order-info-label">{t('common.notes')}</div>
               <div className="order-info-value">{o.notes}</div>
             </div>
           )}
         </div>
 
         <div className="card" style={{ marginTop: 16 }}>
-          <div className="card-header"><h3>المنتجات</h3></div>
+          <div className="card-header"><h3>{t('orderDetails.products')}</h3></div>
           <div className="table-wrapper">
             <table className="products-table-mini">
               <thead>
-                <tr><th>المنتج</th><th>المورد</th><th>الكمية</th><th>السعر</th><th>الإجمالي</th></tr>
+                <tr><th>{t('common.product')}</th><th>{t('common.vendor')}</th><th>{t('common.quantity')}</th><th>{t('common.price')}</th><th>{t('common.total')}</th></tr>
               </thead>
               <tbody>
                 {(o.items || []).map((it) => (
@@ -385,35 +395,35 @@ export default function OrderDetailsModal({ order, onClose, onChanged }) {
           </div>
           <div style={{ padding: 16 }}>
             <div className="order-totals">
-              <div className="total-row"><span>المجموع الجزئي</span><span>{formatCurrency(subtotal)}</span></div>
-              <div className="total-row"><span>ضريبة القيمة المضافة ({taxRate}%)</span><span>{formatCurrency(tax)}</span></div>
-              <div className="total-row"><span>رسوم التوصيل</span><span>{formatCurrency(deliveryFee)}</span></div>
-              <div className="total-row grand-total"><span>الإجمالي الكلي</span><span>{formatCurrency(total)}</span></div>
+              <div className="total-row"><span>{t('orderDetails.subtotal')}</span><span>{formatCurrency(subtotal)}</span></div>
+              <div className="total-row"><span>{t('orderDetails.vat', { rate: taxRate })}</span><span>{formatCurrency(tax)}</span></div>
+              <div className="total-row"><span>{t('orderDetails.deliveryFee')}</span><span>{formatCurrency(deliveryFee)}</span></div>
+              <div className="total-row grand-total"><span>{t('orderDetails.grandTotal')}</span><span>{formatCurrency(total)}</span></div>
             </div>
           </div>
         </div>
 
         <div className="card" style={{ marginTop: 16 }}>
-          <div className="card-header"><h3>المراسلات والفاتورة</h3></div>
+          <div className="card-header"><h3>{t('orderDetails.communicationsAndInvoice')}</h3></div>
           <div className="card-body">
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
               <span className="text-muted" style={{ fontSize: 13 }}>
-                {o.invoice ? `رقم الفاتورة: ${o.invoice.invoiceNumber}` : 'لم تُنشأ الفاتورة بعد — ستُنشأ عند العرض أو الإرسال'}
+                {o.invoice ? t('orderDetails.invoiceNumber', { number: o.invoice.invoiceNumber }) : t('orderDetails.invoiceNotCreated')}
               </span>
               <div style={{ marginInlineStart: 'auto', display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                 <RoleGate roles={['sales', 'account', 'finance', 'admin']}>
                   <button className="btn btn-secondary btn-sm" disabled={busy} onClick={viewInvoice}>
-                    <i className="fa-solid fa-file-invoice" aria-hidden="true" /> عرض الفاتورة
+                    <i className="fa-solid fa-file-invoice" aria-hidden="true" /> {t('orderDetails.viewInvoice')}
                   </button>
                 </RoleGate>
                 <RoleGate roles={['sales', 'account', 'finance', 'admin']}>
                   <button className="btn btn-primary btn-sm" disabled={busy} onClick={sendInvoice}>
-                    <i className="fa-brands fa-whatsapp" aria-hidden="true" /> إرسال الفاتورة للعميل
+                    <i className="fa-brands fa-whatsapp" aria-hidden="true" /> {t('orderDetails.sendInvoiceToCustomer')}
                   </button>
                 </RoleGate>
                 <RoleGate roles={['sales', 'account', 'admin']}>
                   <button className="btn btn-secondary btn-sm" disabled={busy} onClick={notifyVendors}>
-                    <i className="fa-solid fa-store" aria-hidden="true" /> إشعار الموردين
+                    <i className="fa-solid fa-store" aria-hidden="true" /> {t('orderDetails.notifyVendors')}
                   </button>
                 </RoleGate>
               </div>
@@ -421,7 +431,7 @@ export default function OrderDetailsModal({ order, onClose, onChanged }) {
 
             {notifications.length > 0 && (
               <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--gray-600)' }}>سجل الإشعارات</div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--gray-600)' }}>{t('orderDetails.notificationsLog')}</div>
                 {notifications.map((n) => (
                   <div key={n.id} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, flexWrap: 'wrap' }}>
                     <i
@@ -429,13 +439,13 @@ export default function OrderDetailsModal({ order, onClose, onChanged }) {
                       style={{ color: n.channel === 'whatsapp' ? '#25D366' : 'var(--gray-500)' }}
                       aria-hidden="true"
                     />
-                    <span>{NOTIF_TYPE_LABELS[n.type] || n.type}</span>
+                    <span>{notifTypeLabel(n.type)}</span>
                     {n.vendor && <span className="text-muted">— {n.vendor.nameAr || n.vendor.name}</span>}
                     <span className="text-muted">— {n.to}</span>
-                    <span style={{ marginInlineStart: 'auto' }}>{NOTIF_STATUS_LABELS[n.status] || n.status}</span>
+                    <span style={{ marginInlineStart: 'auto' }}>{notifStatusLabel(n.status)}</span>
                     {n.channel === 'whatsapp' && n.link && (
                       <button className="btn btn-secondary btn-sm" onClick={() => window.open(n.link, '_blank')}>
-                        <i className="fa-brands fa-whatsapp" aria-hidden="true" /> فتح
+                        <i className="fa-brands fa-whatsapp" aria-hidden="true" /> {t('orderDetails.open')}
                       </button>
                     )}
                   </div>
@@ -447,20 +457,20 @@ export default function OrderDetailsModal({ order, onClose, onChanged }) {
 
         {o.paymentMethod === 'online' && (
           <div className="card" style={{ marginTop: 16 }}>
-            <div className="card-header"><h3>الدفع الإلكتروني</h3></div>
+            <div className="card-header"><h3>{t('orderDetails.onlinePayment')}</h3></div>
             <div className="card-body" style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
               <span style={{ fontSize: 13 }}>
-                حالة الدفع: <strong>{PAYMENT_STATUS_LABELS[o.paymentStatus] || o.paymentStatus}</strong>
+                {t('orderDetails.paymentStatusLabel')}: <strong>{paymentStatusLabel(o.paymentStatus)}</strong>
               </span>
               <div style={{ marginInlineStart: 'auto', display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                 <RoleGate roles={['sales', 'account', 'finance', 'admin']}>
                   <button className="btn btn-primary btn-sm" disabled={busy} onClick={sendPaymentLink}>
-                    <i className="fa-solid fa-link" aria-hidden="true" /> إرسال رابط الدفع
+                    <i className="fa-solid fa-link" aria-hidden="true" /> {t('orderDetails.sendPaymentLink')}
                   </button>
                 </RoleGate>
                 {role === 'admin' && o.paymentStatus !== 'paid' && (
-                  <button className="btn btn-secondary btn-sm" disabled={busy} onClick={simulatePay} title="للاختبار بدون Stripe">
-                    <i className="fa-solid fa-flask" aria-hidden="true" /> تأكيد الدفع (تجريبي)
+                  <button className="btn btn-secondary btn-sm" disabled={busy} onClick={simulatePay} title={t('orderDetails.testWithoutStripe')}>
+                    <i className="fa-solid fa-flask" aria-hidden="true" /> {t('orderDetails.confirmPaymentTest')}
                   </button>
                 )}
               </div>
@@ -470,26 +480,26 @@ export default function OrderDetailsModal({ order, onClose, onChanged }) {
 
         {vendors.length > 0 && ['finance', 'admin'].includes(role) && (
           <div className="payment-details">
-            <h4><i className="fa-solid fa-credit-card" aria-hidden="true" /> بيانات الدفع للموردين</h4>
+            <h4><i className="fa-solid fa-credit-card" aria-hidden="true" /> {t('orderDetails.vendorPaymentDetails')}</h4>
             {vendors.map((v) => (
               <div key={v.id} style={{ marginBottom: 12, paddingBottom: 12, borderBottom: '1px solid var(--gray-200)' }}>
                 <div style={{ fontWeight: 700, marginBottom: 6 }}>
                   <i className="fa-solid fa-store" aria-hidden="true" /> {v.nameAr || v.name}
                 </div>
                 <div className="form-row">
-                  <div><div className="order-info-label">البنك</div><div className="order-info-value">{v.bankName || '-'}</div></div>
+                  <div><div className="order-info-label">{t('orderDetails.bank')}</div><div className="order-info-value">{v.bankName || '-'}</div></div>
                   <div><div className="order-info-label">IBAN</div><div className="order-info-value" dir="ltr" style={{ fontFamily: 'monospace' }}>{v.iban || '-'}</div></div>
-                  <div><div className="order-info-label">رقم الحساب</div><div className="order-info-value">{v.accountNumber || '-'}</div></div>
-                  <div><div className="order-info-label">صاحب الحساب</div><div className="order-info-value">{v.accountHolder || '-'}</div></div>
+                  <div><div className="order-info-label">{t('orderDetails.accountNumber')}</div><div className="order-info-value">{v.accountNumber || '-'}</div></div>
+                  <div><div className="order-info-label">{t('orderDetails.accountHolder')}</div><div className="order-info-value">{v.accountHolder || '-'}</div></div>
                 </div>
                 <div style={{ marginTop: 8, fontSize: 12, color: 'var(--orange)' }}>
-                  ⏰ شروط الدفع: {v.payoutTerms === 0 ? 'دفع فوري' : `بعد ${v.payoutTerms} يوم`}
+                  ⏰ {t('orderDetails.payoutTermsLabel')}: {v.payoutTerms === 0 ? t('orderDetails.payoutImmediate') : t('orderDetails.payoutAfterDays', { days: v.payoutTerms })}
                 </div>
               </div>
             ))}
             {o.status === 'paid' && o.paymentProof && (
               <div style={{ marginTop: 8, color: 'var(--green-600)', fontWeight: 600 }}>
-                <i className="fa-solid fa-check" aria-hidden="true" /> إثبات الدفع: {o.paymentProof}
+                <i className="fa-solid fa-check" aria-hidden="true" /> {t('orderDetails.paymentProof')}: {o.paymentProof}
               </div>
             )}
           </div>

@@ -34,7 +34,7 @@ export default function AppShell() {
     <div id="app">
       <nav id="sidebar">
         <div className="sidebar-logo">
-          <img src="/logo.png" alt="نبتة" className="brand-logo" />
+          <img src="/logo.png" alt={t('brand.name')} className="brand-logo" />
           <div className="sidebar-logo-text">
             <h2>{t('brand.name')}</h2>
             <p>{t('brand.subtitle')}</p>
@@ -63,7 +63,7 @@ export default function AppShell() {
         <div className="sidebar-footer">
           <div className="sidebar-user">
             <div id="user-avatar" className="sidebar-user-avatar">
-              {(user?.name || 'م').charAt(0)}
+              {(user?.name || t('user')).charAt(0)}
             </div>
             <div className="sidebar-user-info">
               <h4 id="user-name">{user?.name || t('user')}</h4>

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import api, { apiErrorMessage } from '../api/client.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useToast } from './ToastHost.jsx';
@@ -42,6 +43,7 @@ export default function CrudPage({
 }) {
   const { role } = useAuth();
   const showToast = useToast();
+  const { t } = useTranslation();
 
   const [items, setItems] = useState([]);
   const [lookupData, setLookupData] = useState({});
@@ -103,7 +105,7 @@ export default function CrudPage({
       if (f.showIf && !f.showIf(values)) continue; // hidden fields aren't required
       const required = f.required || (isCreate && f.requiredOnCreate);
       if (required && f.type !== 'location' && !String(values[f.name] ?? '').trim()) {
-        showToast('يرجى ملء الحقول المطلوبة', 'error');
+        showToast(t('validation.requiredFields'), 'error');
         return;
       }
     }
@@ -156,13 +158,13 @@ export default function CrudPage({
               <input
                 type="text"
                 readOnly
-                placeholder="لم يتم تحديد الموقع"
+                placeholder={t('common.locationPlaceholder')}
                 value={values[f.name]?.address || ''}
                 style={{ flex: 1, background: 'var(--gray-50)', cursor: 'pointer' }}
                 onClick={() => setPickingField(f.name)}
               />
               <button type="button" className="btn btn-secondary" onClick={() => setPickingField(f.name)}>
-                <i className="fa-solid fa-location-dot" aria-hidden="true" /> خريطة
+                <i className="fa-solid fa-location-dot" aria-hidden="true" /> {t('common.map')}
               </button>
             </div>
             {values[f.name]?.lat && (
@@ -175,7 +177,7 @@ export default function CrudPage({
           <textarea {...common} placeholder={f.placeholder} />
         ) : f.type === 'select' ? (
           <select {...common}>
-            <option value="">{f.placeholder || '-- اختر --'}</option>
+            <option value="">{f.placeholder || t('common.selectPlaceholder')}</option>
             {(typeof f.options === 'function'
               ? f.options(values, lookupData)
               : (f.options || (lookupData[f.lookup] || []).map((it) => ({ value: it.id, label: f.optionLabel(it) })))
@@ -226,7 +228,7 @@ export default function CrudPage({
             <thead>
               <tr>
                 {columns.map((c) => <th key={c.header}>{c.header}</th>)}
-                <th>إجراءات</th>
+                <th>{t('common.actions')}</th>
               </tr>
             </thead>
             <tbody>
@@ -235,7 +237,7 @@ export default function CrudPage({
               ) : items.length === 0 ? (
                 <tr>
                   <td colSpan={columns.length + 1} style={{ textAlign: 'center', padding: 20, color: 'var(--gray-400)' }}>
-                    لا توجد بيانات
+                    {t('common.noData')}
                   </td>
                 </tr>
               ) : (
@@ -245,13 +247,13 @@ export default function CrudPage({
                     <td>
                       <div className="table-actions">
                         {canEdit && (
-                          <button className="btn btn-warning btn-sm" onClick={() => openForm(item)}>تعديل</button>
+                          <button className="btn btn-warning btn-sm" onClick={() => openForm(item)}>{t('common.edit')}</button>
                         )}
                         {canDelete && (
-                          <button className="btn btn-danger btn-sm" onClick={() => setDeleting(item)}>حذف</button>
+                          <button className="btn btn-danger btn-sm" onClick={() => setDeleting(item)}>{t('common.delete')}</button>
                         )}
                         {!canEdit && viewModal && (
-                          <button className="btn btn-info btn-sm" onClick={() => setViewed(item)}>عرض</button>
+                          <button className="btn btn-info btn-sm" onClick={() => setViewed(item)}>{t('common.view')}</button>
                         )}
                       </div>
                     </td>
@@ -269,9 +271,9 @@ export default function CrudPage({
           onClose={() => setEditing(null)}
           footer={
             <>
-              <button className="btn btn-secondary" onClick={() => setEditing(null)}>إلغاء</button>
+              <button className="btn btn-secondary" onClick={() => setEditing(null)}>{t('common.cancel')}</button>
               <button className="btn btn-primary" onClick={save} disabled={saving}>
-                {saving ? 'جارٍ الحفظ…' : 'حفظ'}
+                {saving ? t('common.saving') : t('common.save')}
               </button>
             </>
           }
@@ -290,7 +292,7 @@ export default function CrudPage({
         <Modal
           title={viewed.nameAr || viewed.name}
           onClose={() => setViewed(null)}
-          footer={<button className="btn btn-secondary" onClick={() => setViewed(null)}>إغلاق</button>}
+          footer={<button className="btn btn-secondary" onClick={() => setViewed(null)}>{t('common.close')}</button>}
         >
           {viewModal(viewed)}
         </Modal>

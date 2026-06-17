@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import L from '../utils/leafletSetup.js';
 import api from '../api/client.js';
 
@@ -8,6 +9,7 @@ const POLL_MS = 10_000;
 // Public customer-facing tracking page (no login). The unguessable topic UUID
 // in the URL is the only credential — mirrors the legacy #track flow.
 export default function PublicTrackPage() {
+  const { t } = useTranslation();
   const { topic } = useParams();
   const mapElRef = useRef(null);
   const mapRef = useRef(null);
@@ -49,7 +51,7 @@ export default function PublicTrackPage() {
           }
         }
       } catch (err) {
-        if (!disposed) setError(err.response?.data?.error || 'تعذر تحميل بيانات التتبع.');
+        if (!disposed) setError(err.response?.data?.error || t('publicTrack.loadError'));
       }
       timer = setTimeout(poll, POLL_MS);
     }
@@ -67,9 +69,9 @@ export default function PublicTrackPage() {
   return (
     <div style={{ maxWidth: 720, margin: '0 auto', padding: 16 }}>
       <div style={{ textAlign: 'center', marginBottom: 16 }}>
-        <img src="/logo.png" alt="نبتة" style={{ height: 40 }} />
-        <h2 style={{ fontWeight: 800 }}>تتبع طلبك</h2>
-        {info?.orderNumber && <p className="text-muted">الطلب: {info.orderNumber}</p>}
+        <img src="/logo.png" alt={t('publicTrack.brandAlt')} style={{ height: 40 }} />
+        <h2 style={{ fontWeight: 800 }}>{t('publicTrack.title')}</h2>
+        {info?.orderNumber && <p className="text-muted">{t('publicTrack.orderLabel', { number: info.orderNumber })}</p>}
       </div>
 
       {error ? (
@@ -78,12 +80,12 @@ export default function PublicTrackPage() {
         </div>
       ) : info && !info.latest ? (
         <div style={{ background: 'var(--yellow-light)', color: 'var(--orange)', padding: 16, borderRadius: 8, textAlign: 'center', fontWeight: 600 }}>
-          موقع المركبة غير متاح بعد. ستظهر المركبة هنا بمجرد بدء السائق التتبع.
+          {t('publicTrack.vehicleUnavailable')}
         </div>
       ) : info?.latest ? (
         <div className="text-muted" style={{ fontSize: 13, marginBottom: 8, textAlign: 'center' }}>
-          آخر تحديث: {new Date(info.latest.recordedAt).toLocaleTimeString('ar-AE')}
-          {info.latest.state === 'stale' ? ' (الإشارة متقطعة)' : ''}
+          {t('publicTrack.lastUpdate', { time: new Date(info.latest.recordedAt).toLocaleTimeString('ar-AE') })}
+          {info.latest.state === 'stale' ? ` ${t('publicTrack.signalIntermittent')}` : ''}
         </div>
       ) : null}
 
