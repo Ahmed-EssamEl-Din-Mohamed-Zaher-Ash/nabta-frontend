@@ -195,7 +195,7 @@ export default function FinancePage() {
             <div className="table-wrapper">
               <table>
                 <thead>
-                  <tr><th>رقم الأوردر</th><th>التاريخ</th><th>العميل</th><th>قيمة البضاعة</th><th>عمولة نبتة</th></tr>
+                  <tr><th>رقم الطلب</th><th>التاريخ</th><th>العميل</th><th>قيمة البضاعة</th><th>عمولة نبتة</th></tr>
                 </thead>
                 <tbody>
                   {commissions.orders.length === 0 ? (

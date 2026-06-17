@@ -5,7 +5,7 @@
 export const ROLE_LABELS = {
   admin: 'مدير النظام',
   sales: 'مهندس مبيعات',
-  account: 'أكاونت مانجر',
+  account: 'مدير الحسابات',
   ops: 'عمليات وتوصيل',
   finance: 'محاسبة',
   driver: 'سائق',
@@ -24,7 +24,7 @@ export const STATUS_LABELS = {
 
 // Which role may advance an order from a given status, and to what.
 export const STATUS_FLOW = {
-  new: { next: 'confirmed', label: 'تأكيد الأوردر', roles: ['sales', 'admin'] },
+  new: { next: 'confirmed', label: 'تأكيد الطلب', roles: ['sales', 'admin'] },
   confirmed: { next: 'preparing', label: 'بدء التحضير', roles: ['account', 'admin'] },
   preparing: { next: 'ready', label: 'جاهز للتوصيل', roles: ['account', 'admin'] },
   ready: { next: 'out', label: 'إرسال للتوصيل', roles: ['ops', 'admin'] },
@@ -60,8 +60,8 @@ export const ROLE_PAGES = {
 // Sidebar metadata, in legacy display order (object key order matters).
 export const NAV_ITEMS = {
   dashboard: { label: 'الرئيسية', icon: 'home', section: 'رئيسي' },
-  orders: { label: 'الأوردرات', icon: 'orders', section: 'رئيسي' },
-  'add-order': { label: 'إضافة أوردر', icon: 'plus', section: 'رئيسي' },
+  orders: { label: 'الطلبات', icon: 'orders', section: 'رئيسي' },
+  'add-order': { label: 'إضافة طلب', icon: 'plus', section: 'رئيسي' },
   products: { label: 'المنتجات', icon: 'products', section: 'بيانات' },
   offers: { label: 'العروض والخصومات', icon: 'products', section: 'بيانات' },
   vendors: { label: 'الموردون', icon: 'vendor', section: 'بيانات' },

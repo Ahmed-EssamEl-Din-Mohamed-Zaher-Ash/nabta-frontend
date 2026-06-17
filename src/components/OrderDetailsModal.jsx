@@ -61,7 +61,7 @@ function AssignDriverModal({ order, onClose, onSaved }) {
 
   return (
     <Modal
-      title={`تعيين سائق للأوردر ${order.orderNumber}`}
+      title={`تعيين سائق للطلب ${order.orderNumber}`}
       onClose={onClose}
       footer={
         <>
@@ -318,7 +318,7 @@ export default function OrderDetailsModal({ order, onClose, onChanged }) {
       )}
       <RoleGate roles={['sales', 'admin']}>
         <button className="btn btn-secondary" onClick={() => setAssigningAccount(true)}>
-          <i className="fa-solid fa-user-tie" aria-hidden="true" /> تحويل لأكاونت مانجر
+          <i className="fa-solid fa-user-tie" aria-hidden="true" /> تحويل لمدير الحسابات
         </button>
       </RoleGate>
     </>
@@ -326,7 +326,7 @@ export default function OrderDetailsModal({ order, onClose, onChanged }) {
 
   return (
     <>
-      <Modal title={`تفاصيل الأوردر — ${o.orderNumber}`} size="xl" onClose={onClose} footer={footer}>
+      <Modal title={`تفاصيل الطلب — ${o.orderNumber}`} size="xl" onClose={onClose} footer={footer}>
         <div className="order-status-trail">
           {TRAIL_STEPS.map((s, i) => {
             let cls = '';
@@ -342,7 +342,7 @@ export default function OrderDetailsModal({ order, onClose, onChanged }) {
         </div>
 
         <div className="order-info-grid">
-          <div className="order-info-item"><div className="order-info-label">رقم الأوردر</div><div className="order-info-value fw-bold">{o.orderNumber}</div></div>
+          <div className="order-info-item"><div className="order-info-label">رقم الطلب</div><div className="order-info-value fw-bold">{o.orderNumber}</div></div>
           <div className="order-info-item"><div className="order-info-label">التاريخ</div><div className="order-info-value">{o.date}</div></div>
           <div className="order-info-item"><div className="order-info-label">العميل</div><div className="order-info-value">{o.customer?.name || '-'}</div></div>
           <div className="order-info-item"><div className="order-info-label">هاتف العميل</div><div className="order-info-value">{o.customer?.phone || '-'}</div></div>
@@ -353,7 +353,7 @@ export default function OrderDetailsModal({ order, onClose, onChanged }) {
           <div className="order-info-item"><div className="order-info-label">السائق</div><div className="order-info-value">{o.driver?.name || 'غير محدد'}</div></div>
           <div className="order-info-item"><div className="order-info-label">المركبة</div><div className="order-info-value">{o.vehicle?.plate || 'غير محددة'}</div></div>
           <div className="order-info-item"><div className="order-info-label">المسار</div><div className="order-info-value">{o.route?.name || 'غير محدد'}</div></div>
-          <div className="order-info-item"><div className="order-info-label">المسؤول (أكاونت مانجر)</div><div className="order-info-value">{o.account?.name || 'غير محوّل'}</div></div>
+          <div className="order-info-item"><div className="order-info-label">المسؤول (مدير الحسابات)</div><div className="order-info-value">{o.account?.name || 'غير محوّل'}</div></div>
           <div className="order-info-item"><div className="order-info-label">الموقع</div><div className="order-info-value">{o.location?.address || '-'}</div></div>
           {o.notes && (
             <div className="order-info-item" style={{ gridColumn: '1/-1' }}>

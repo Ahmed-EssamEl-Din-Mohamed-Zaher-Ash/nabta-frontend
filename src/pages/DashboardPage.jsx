@@ -19,15 +19,15 @@ function buildStats(role, counts, financials, customersCount) {
 
   const map = {
     admin: [
-      card('fa-clipboard-list', 'إجمالي الأوردرات', c.total, 'var(--blue)', 'var(--blue-light)'),
-      card('fa-bell', 'أوردرات جديدة', c.new, 'var(--orange)', 'var(--orange-light)'),
+      card('fa-clipboard-list', 'إجمالي الطلبات', c.total, 'var(--blue)', 'var(--blue-light)'),
+      card('fa-bell', 'طلبات جديدة', c.new, 'var(--orange)', 'var(--orange-light)'),
       card('fa-truck', 'في التوصيل', c.out, 'var(--purple)', 'var(--purple-light)'),
       card('fa-check', 'تم التسليم', c.delivered, 'var(--green-600)', 'var(--green-100)'),
       card('fa-coins', 'الإيراد الكلي', formatCurrency(f.totalRevenue), 'var(--green-700)', 'var(--green-100)'),
       card('fa-hourglass-half', 'مستحق للموردين', formatCurrency(f.pendingPayment), 'var(--red)', 'var(--red-light)'),
     ],
     sales: [
-      card('fa-clipboard-list', 'أوردراتي', c.new + c.confirmed, 'var(--blue)', 'var(--blue-light)'),
+      card('fa-clipboard-list', 'طلباتي', c.new + c.confirmed, 'var(--blue)', 'var(--blue-light)'),
       card('fa-bell', 'جديدة', c.new, 'var(--orange)', 'var(--orange-light)'),
       card('fa-check', 'مؤكدة', c.confirmed, 'var(--green-600)', 'var(--green-100)'),
       card('fa-users', 'عملاء', customersCount, 'var(--purple)', 'var(--purple-light)'),
@@ -52,7 +52,7 @@ function buildStats(role, counts, financials, customersCount) {
       card('fa-money-bill-wave', 'إجمالي المدفوع', formatCurrency(f.totalRevenue - f.pendingPayment), 'var(--blue)', 'var(--blue-light)'),
     ],
     driver: [
-      card('fa-truck', 'أوردراتي اليوم', c.out, 'var(--orange)', 'var(--orange-light)'),
+      card('fa-truck', 'طلباتي اليوم', c.out, 'var(--orange)', 'var(--orange-light)'),
       card('fa-check', 'تم تسليمها', c.delivered, 'var(--green-600)', 'var(--green-100)'),
     ],
   };
@@ -146,17 +146,17 @@ export default function DashboardPage() {
 
       <div className="card">
         <div className="card-header">
-          <h3>آخر الأوردرات</h3>
+          <h3>آخر الطلبات</h3>
           <button className="btn btn-secondary btn-sm" onClick={() => navigate('/orders')}>عرض الكل</button>
         </div>
         <div className="table-wrapper">
           <table>
             <thead>
-              <tr><th>رقم الأوردر</th><th>العميل</th><th>الحالة</th><th>الإجمالي</th><th>التاريخ</th><th>إجراءات</th></tr>
+              <tr><th>رقم الطلب</th><th>العميل</th><th>الحالة</th><th>الإجمالي</th><th>التاريخ</th><th>إجراءات</th></tr>
             </thead>
             <tbody>
               {recent.length === 0 ? (
-                <tr><td colSpan={6}><div className="empty-state" style={{ padding: 20 }}><p>لا توجد أوردرات</p></div></td></tr>
+                <tr><td colSpan={6}><div className="empty-state" style={{ padding: 20 }}><p>لا توجد طلبات</p></div></td></tr>
               ) : (
                 recent.map((o) => (
                   <tr key={o.id}>

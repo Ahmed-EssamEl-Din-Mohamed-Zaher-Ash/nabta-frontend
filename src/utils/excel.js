@@ -41,7 +41,7 @@ export function exportSalesExcel(orders) {
     const tax = sub * ((o.taxRate ?? 5) / 100);
     const del = o.deliveryFee || 0;
     return {
-      'رقم الأوردر': o.orderNumber,
+      'رقم الطلب': o.orderNumber,
       'تاريخ الإنشاء': fmtDate(o.date),
       'العميل': o.customer?.name || '-',
       'هاتف العميل': o.customer?.phone || '-',
@@ -62,15 +62,15 @@ export function exportSalesExcel(orders) {
   orders.forEach((o) => {
     (o.items || []).forEach((it) => {
       rows2.push({
-        'رقم الأوردر': o.orderNumber,
-        'تاريخ الأوردر': fmtDate(o.date),
+        'رقم الطلب': o.orderNumber,
+        'تاريخ الطلب': fmtDate(o.date),
         'اسم المنتج': it.product?.nameAr || it.product?.name || it.productId,
         'الكمية': it.qty,
         'الوحدة': it.product?.unit || '-',
         'سعر الوحدة': fmtNum(it.price),
         'إجمالي السطر': fmtNum(it.qty * it.price),
         'المورد': vName(o),
-        'حالة الأوردر': STATUS_LABELS[o.status] || o.status,
+        'حالة الطلب': STATUS_LABELS[o.status] || o.status,
       });
     });
   });
@@ -78,7 +78,7 @@ export function exportSalesExcel(orders) {
   const wb = XLSX.utils.book_new();
   const ws1 = XLSX.utils.json_to_sheet(rows1);
   setColWidths(ws1, [12, 12, 22, 14, 28, 20, 8, 14, 16, 12, 14, 14, 12, 24]);
-  addSheet(wb, ws1, 'ملخص الأوردرات');
+  addSheet(wb, ws1, 'ملخص الطلبات');
   const ws2 = XLSX.utils.json_to_sheet(rows2);
   setColWidths(ws2, [12, 12, 28, 8, 10, 12, 14, 20, 14]);
   addSheet(wb, ws2, 'تفاصيل المنتجات');
@@ -88,8 +88,8 @@ export function exportSalesExcel(orders) {
 // ── 2. ACCOUNT MANAGER ──────────────────────────────────────────
 export function exportAccountExcel(orders, vendors) {
   const rows1 = orders.map((o) => ({
-    'رقم الأوردر': o.orderNumber,
-    'تاريخ الأوردر': fmtDate(o.date),
+    'رقم الطلب': o.orderNumber,
+    'تاريخ الطلب': fmtDate(o.date),
     'العميل': o.customer?.name || '-',
     'المورد': vName(o),
     'هاتف المورد': o.vendor?.phone || '-',
@@ -110,7 +110,7 @@ export function exportAccountExcel(orders, vendors) {
     return {
       'المورد': v.nameAr || v.name,
       'الهاتف': v.phone || '-',
-      'إجمالي الأوردرات': vOrders.length,
+      'إجمالي الطلبات': vOrders.length,
       'القيمة الإجمالية': fmtNum(vOrders.reduce((s, o) => s + totalOf(o), 0)),
       'مؤكد': vOrders.filter((o) => o.status === 'confirmed').length,
       'قيد التحضير': vOrders.filter((o) => o.status === 'preparing').length,
@@ -123,7 +123,7 @@ export function exportAccountExcel(orders, vendors) {
   const wb = XLSX.utils.book_new();
   const ws1 = XLSX.utils.json_to_sheet(rows1);
   setColWidths(ws1, [12, 12, 22, 20, 14, 24, 48, 12, 14, 16, 14, 16, 24]);
-  addSheet(wb, ws1, 'أوردرات الموردين');
+  addSheet(wb, ws1, 'طلبات الموردين');
   const ws2 = XLSX.utils.json_to_sheet(rows2);
   setColWidths(ws2, [22, 14, 10, 14, 8, 12, 12, 10, 14]);
   addSheet(wb, ws2, 'ملخص الموردين');
@@ -133,8 +133,8 @@ export function exportAccountExcel(orders, vendors) {
 // ── 3. OPERATIONS ───────────────────────────────────────────────
 export function exportOpsExcel(orders, drivers) {
   const rows1 = orders.map((o) => ({
-    'رقم الأوردر': o.orderNumber,
-    'تاريخ الأوردر': fmtDate(o.date),
+    'رقم الطلب': o.orderNumber,
+    'تاريخ الطلب': fmtDate(o.date),
     'العميل': o.customer?.name || '-',
     'هاتف العميل': o.customer?.phone || '-',
     'عنوان التسليم': o.deliveryAddress || '-',
@@ -161,7 +161,7 @@ export function exportOpsExcel(orders, drivers) {
       'السائق': d.name,
       'الهاتف': d.phone || '-',
       'المركبة': d.vehicle?.plate || '-',
-      'إجمالي الأوردرات': total,
+      'إجمالي الطلبات': total,
       'تم التسليم': delivered,
       'فشل التسليم': failed,
       'قيد التنفيذ': dOrders.filter((o) => o.status === 'out').length,
@@ -172,7 +172,7 @@ export function exportOpsExcel(orders, drivers) {
   const wb = XLSX.utils.book_new();
   const ws1 = XLSX.utils.json_to_sheet(rows1);
   setColWidths(ws1, [12, 12, 22, 14, 28, 12, 12, 18, 14, 14, 18, 16, 14, 14, 14, 16, 20]);
-  addSheet(wb, ws1, 'أوردرات التوصيل');
+  addSheet(wb, ws1, 'طلبات التوصيل');
   const ws2 = XLSX.utils.json_to_sheet(rows2.length ? rows2 : [{ 'لا يوجد بيانات': '-' }]);
   setColWidths(ws2, [22, 14, 14, 10, 10, 10, 10, 10]);
   addSheet(wb, ws2, 'أداء السائقين');
@@ -188,8 +188,8 @@ export function exportFinanceExcel(orders, vendors) {
     const tax = sub * ((o.taxRate ?? 5) / 100);
     const del = o.deliveryFee || 0;
     return {
-      'رقم الأوردر': o.orderNumber,
-      'تاريخ الأوردر': fmtDate(o.date),
+      'رقم الطلب': o.orderNumber,
+      'تاريخ الطلب': fmtDate(o.date),
       'تاريخ التسليم': fmtDate(o.deliveredAt),
       'العميل': o.customer?.name || '-',
       'المورد': vName(o),
@@ -243,8 +243,8 @@ export function exportFinanceExcel(orders, vendors) {
     { 'البند': 'تم الدفع للموردين', 'المبلغ (د.إ)': fmtNum(orders.filter((o) => o.status === 'paid').reduce((s, o) => s + totalOf(o), 0)) },
     { 'البند': 'المعلق للموردين', 'المبلغ (د.إ)': fmtNum(orders.filter((o) => o.status === 'delivered').reduce((s, o) => s + totalOf(o), 0)) },
     { 'البند': '---', 'المبلغ (د.إ)': '' },
-    { 'البند': 'عدد الأوردرات المسلّمة', 'المبلغ (د.إ)': delivered.length },
-    { 'البند': 'عدد الأوردرات المدفوعة للمورد', 'المبلغ (د.إ)': orders.filter((o) => o.status === 'paid').length },
+    { 'البند': 'عدد الطلبات المسلّمة', 'المبلغ (د.إ)': delivered.length },
+    { 'البند': 'عدد الطلبات المدفوعة للمورد', 'المبلغ (د.إ)': orders.filter((o) => o.status === 'paid').length },
   ];
 
   const wb = XLSX.utils.book_new();
@@ -268,7 +268,7 @@ export function exportMasterExcel(orders, vendors, customers, drivers) {
     const sub = subtotalOf(o);
     const tax = sub * ((o.taxRate ?? 5) / 100);
     return {
-      'رقم الأوردر': o.orderNumber,
+      'رقم الطلب': o.orderNumber,
       'التاريخ': fmtDate(o.date),
       'العميل': o.customer?.name || '-',
       'هاتف العميل': o.customer?.phone || '-',
@@ -292,13 +292,13 @@ export function exportMasterExcel(orders, vendors, customers, drivers) {
   });
   const ws1 = XLSX.utils.json_to_sheet(allOrderRows);
   setColWidths(ws1, [12, 12, 22, 14, 20, 18, 28, 12, 10, 12, 12, 16, 12, 12, 12, 12, 12, 12, 16, 24]);
-  addSheet(wb, ws1, 'جميع الأوردرات');
+  addSheet(wb, ws1, 'جميع الطلبات');
 
   const prodRows = [];
   orders.forEach((o) => {
     (o.items || []).forEach((it) => {
       prodRows.push({
-        'رقم الأوردر': o.orderNumber,
+        'رقم الطلب': o.orderNumber,
         'المنتج': it.product?.nameAr || it.product?.name || it.productId,
         'الكمية': it.qty,
         'سعر الوحدة': fmtNum(it.price),
@@ -355,13 +355,13 @@ export function exportMasterExcel(orders, vendors, customers, drivers) {
     const stOrders = orders.filter((o) => o.status === s);
     return {
       'الحالة': STATUS_LABELS[s] || s,
-      'عدد الأوردرات': stOrders.length,
+      'عدد الطلبات': stOrders.length,
       'القيمة الإجمالية': fmtNum(stOrders.reduce((sum, o) => sum + totalOf(o), 0)),
     };
   });
   summaryRows.push({
     'الحالة': 'الإجمالي الكلي',
-    'عدد الأوردرات': orders.length,
+    'عدد الطلبات': orders.length,
     'القيمة الإجمالية': fmtNum(orders.reduce((s, o) => s + totalOf(o), 0)),
   });
   const ws6 = XLSX.utils.json_to_sheet(summaryRows);
@@ -403,7 +403,7 @@ export function exportFinanceModuleExcel({ overview, dues, commissions }) {
   addSheet(wb, ws2, 'مستحقات الموردين');
 
   const comRows = (commissions?.orders || []).map((o) => ({
-    'رقم الأوردر': o.orderNumber,
+    'رقم الطلب': o.orderNumber,
     'التاريخ': o.date,
     'العميل': o.customer,
     'قيمة البضاعة': fmtNum(o.gross),
@@ -429,7 +429,7 @@ export function exportAnalyticsExcel(orders, vendors, products) {
   const sheetOrders = orders.map((o) => {
     const sub = subtotalOf(o);
     return {
-      'رقم الأوردر': o.orderNumber,
+      'رقم الطلب': o.orderNumber,
       'التاريخ': fmtDate(o.date),
       'العميل': o.customer?.name || '-',
       'المورد': vName(o),
@@ -444,7 +444,7 @@ export function exportAnalyticsExcel(orders, vendors, products) {
   });
 
   const wb = XLSX.utils.book_new();
-  addSheet(wb, XLSX.utils.json_to_sheet(sheetOrders), 'الأوردرات');
+  addSheet(wb, XLSX.utils.json_to_sheet(sheetOrders), 'الطلبات');
   addSheet(
     wb,
     XLSX.utils.json_to_sheet(

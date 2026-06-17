@@ -99,7 +99,7 @@ export default function OrdersPage() {
   return (
     <>
       <div className="page-toolbar">
-        <h3 style={{ fontSize: 16, fontWeight: 700 }}>{visible.length} أوردر</h3>
+        <h3 style={{ fontSize: 16, fontWeight: 700 }}>{visible.length} طلب</h3>
         <div className="toolbar-right">
           <select className="filter-select" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
             <option value="">كل الحالات</option>
@@ -109,7 +109,7 @@ export default function OrdersPage() {
           </select>
           <RoleGate roles={['sales', 'admin']}>
             <button className="btn btn-primary" onClick={() => navigate('/add-order')}>
-              + إضافة أوردر
+              + إضافة طلب
             </button>
           </RoleGate>
           <RoleGate roles={['sales', 'account', 'ops', 'finance', 'admin']}>
@@ -134,7 +134,7 @@ export default function OrdersPage() {
           <table>
             <thead>
               <tr>
-                <th>رقم الأوردر</th><th>العميل</th><th>المورد</th><th>الحالة</th>
+                <th>رقم الطلب</th><th>العميل</th><th>المورد</th><th>الحالة</th>
                 <th>الإجمالي</th><th>التاريخ</th><th>إجراءات</th>
               </tr>
             </thead>
@@ -145,7 +145,7 @@ export default function OrdersPage() {
                 <tr>
                   <td colSpan={7}>
                     <div className="empty-state" style={{ padding: 30 }}>
-                      <h3>لا توجد أوردرات</h3>
+                      <h3>لا توجد طلبات</h3>
                     </div>
                   </td>
                 </tr>

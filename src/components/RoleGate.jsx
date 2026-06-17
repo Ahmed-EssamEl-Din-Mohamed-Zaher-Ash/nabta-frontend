@@ -4,7 +4,7 @@ import { getStatusAction } from '../constants/permissions.js';
 /**
  * Element-level guard: renders children only when the current role is allowed.
  *
- *   <RoleGate roles={['sales', 'admin']}><button>إضافة أوردر</button></RoleGate>
+ *   <RoleGate roles={['sales', 'admin']}><button>إضافة طلب</button></RoleGate>
  *
  * For order-status buttons, use the render-prop form driven by STATUS_FLOW —
  * it yields the exact action (next status + Arabic label) the role may perform:

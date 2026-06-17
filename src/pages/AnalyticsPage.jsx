@@ -50,11 +50,11 @@ export default function AnalyticsPage() {
   const { stats, statusCounts, vendorSummary, topProducts, monthlyOrders } = data;
 
   const statCards = [
-    { icon: 'fa-clipboard-list', bg: 'var(--blue-light)', value: stats.totalOrders, label: 'إجمالي الأوردرات' },
-    { icon: 'fa-check', bg: 'var(--green-100)', value: stats.deliveredOrders, label: 'أوردرات مسلّمة' },
+    { icon: 'fa-clipboard-list', bg: 'var(--blue-light)', value: stats.totalOrders, label: 'إجمالي الطلبات' },
+    { icon: 'fa-check', bg: 'var(--green-100)', value: stats.deliveredOrders, label: 'طلبات مسلّمة' },
     { icon: 'fa-coins', bg: 'var(--green-100)', value: formatCurrency(stats.totalRevenue), label: 'إجمالي الإيرادات' },
     { icon: 'fa-hourglass-half', bg: 'var(--orange-light)', value: formatCurrency(stats.pendingPayment), label: 'مستحق للموردين' },
-    { icon: 'fa-chart-column', bg: 'var(--purple-light)', value: formatCurrency(stats.avgOrderValue), label: 'متوسط قيمة الأوردر' },
+    { icon: 'fa-chart-column', bg: 'var(--purple-light)', value: formatCurrency(stats.avgOrderValue), label: 'متوسط قيمة الطلب' },
     { icon: 'fa-industry', bg: 'var(--yellow-light)', value: stats.vendorsCount, label: 'عدد الموردين' },
   ];
 
@@ -77,7 +77,7 @@ export default function AnalyticsPage() {
 
       <div className="charts-grid">
         <div className="chart-card">
-          <h4>توزيع الأوردرات حسب الحالة</h4>
+          <h4>توزيع الطلبات حسب الحالة</h4>
           <Doughnut
             data={{
               labels: presentStatuses.map((k) => STATUS_LABELS[k]),
@@ -124,12 +124,12 @@ export default function AnalyticsPage() {
         </div>
 
         <div className="chart-card">
-          <h4>الأوردرات خلال الأشهر الأخيرة</h4>
+          <h4>الطلبات خلال الأشهر الأخيرة</h4>
           <Line
             data={{
               labels: monthlyOrders.map((m) => m.month),
               datasets: [{
-                label: 'عدد الأوردرات',
+                label: 'عدد الطلبات',
                 data: monthlyOrders.map((m) => m.count),
                 borderColor: '#1E7C3F',
                 backgroundColor: 'rgba(30,124,63,.1)',
@@ -158,7 +158,7 @@ export default function AnalyticsPage() {
         <div className="table-wrapper">
           <table>
             <thead>
-              <tr><th>المورد</th><th>عدد الأوردرات</th><th>الإيراد الكلي</th><th>المستحق</th><th>شروط الدفع</th></tr>
+              <tr><th>المورد</th><th>عدد الطلبات</th><th>الإيراد الكلي</th><th>المستحق</th><th>شروط الدفع</th></tr>
             </thead>
             <tbody>
               {vendorSummary.map((v) => (

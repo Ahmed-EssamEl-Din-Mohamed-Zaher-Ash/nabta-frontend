@@ -87,7 +87,7 @@ export default function TrackingMapPage() {
           });
           const popup = `<div style="font-family:Tajawal,sans-serif;min-width:180px;direction:rtl">
             <strong>مركبة مباشرة</strong><br>
-            <span style="font-size:12px">الأوردر: ${loc.orderNumber || '-'}</span><br>
+            <span style="font-size:12px">الطلب: ${loc.orderNumber || '-'}</span><br>
             <span style="font-size:12px">السائق: ${loc.driverName || '-'}</span><br>
             <span style="font-size:12px">آخر إشارة: ${loc.recordedAt ? new Date(loc.recordedAt).toLocaleTimeString('ar-AE') : '-'}</span>
           </div>`;
@@ -124,8 +124,8 @@ export default function TrackingMapPage() {
   return (
     <>
       <div className="page-header">
-        <h2><i className="fa-solid fa-map-location-dot" aria-hidden="true" /> خريطة تتبع الأوردرات</h2>
-        <span className="text-muted">{orderCount} أوردر على الخريطة</span>
+        <h2><i className="fa-solid fa-map-location-dot" aria-hidden="true" /> خريطة تتبع الطلبات</h2>
+        <span className="text-muted">{orderCount} طلب على الخريطة</span>
       </div>
       <div className="card" style={{ marginBottom: 16 }}>
         <div className="card-body" style={{ padding: '12px 20px' }}>

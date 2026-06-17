@@ -118,7 +118,7 @@ export default function AddOrderPage() {
           paymentMethod: form.paymentMethod,
           notes: form.notes,
         });
-        showToast('تم تعديل الأوردر', 'success');
+        showToast('تم تعديل الطلب', 'success');
       } else {
         if (!products.length) {
           showToast('أضف منتجاً على الأقل', 'error');
@@ -135,7 +135,7 @@ export default function AddOrderPage() {
           paymentMethod: form.paymentMethod,
           notes: form.notes,
         });
-        showToast(`تم إنشاء الأوردر ${data.order.orderNumber}`, 'success');
+        showToast(`تم إنشاء الطلب ${data.order.orderNumber}`, 'success');
       }
       navigate('/orders');
     } catch (err) {
@@ -152,7 +152,7 @@ export default function AddOrderPage() {
   return (
     <div style={{ maxWidth: 900 }}>
       <div className="page-toolbar">
-        <h3 style={{ fontSize: 16, fontWeight: 700 }}>{editMode ? 'تعديل الأوردر' : 'إضافة أوردر جديد'}</h3>
+        <h3 style={{ fontSize: 16, fontWeight: 700 }}>{editMode ? 'تعديل الطلب' : 'إضافة طلب جديد'}</h3>
         <button className="btn btn-secondary" onClick={() => navigate('/orders')}>← رجوع</button>
       </div>
 
@@ -252,12 +252,12 @@ export default function AddOrderPage() {
         <div className="card-body">
           {editMode ? (
             <p className="text-muted" style={{ fontSize: 13 }}>
-              لا يمكن تعديل المنتجات بعد إنشاء الأوردر — لإجراء تغيير على الأصناف قم بإنشاء أوردر جديد.
+              لا يمكن تعديل المنتجات بعد إنشاء الطلب — لإجراء تغيير على الأصناف قم بإنشاء طلب جديد.
             </p>
           ) : (
             <>
               <p className="text-muted" style={{ fontSize: 12, marginBottom: 8 }}>
-                يتم تحديد المورد تلقائياً حسب كل منتج، ويُقسَّم الأوردر على الموردين عند الحاجة.
+                يتم تحديد المورد تلقائياً حسب كل منتج، ويُقسَّم الطلب على الموردين عند الحاجة.
               </p>
               <div className="order-products-list">
                 <div
@@ -320,7 +320,7 @@ export default function AddOrderPage() {
                 <div className="card" style={{ marginTop: 14, background: 'var(--gray-50)' }}>
                   <div className="card-body" style={{ padding: 12 }}>
                     <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--gray-600)', marginBottom: 6 }}>
-                      <i className="fa-solid fa-code-branch" aria-hidden="true" /> تقسيم الأوردر حسب المورد ({vendorGroups.length} موردين)
+                      <i className="fa-solid fa-code-branch" aria-hidden="true" /> تقسيم الطلب حسب المورد ({vendorGroups.length} موردين)
                     </div>
                     {vendorGroups.map((g, i) => (
                       <div key={i} className="total-row" style={{ fontSize: 13 }}>
@@ -348,7 +348,7 @@ export default function AddOrderPage() {
         <div className="card-body">
           <div className="form-group" style={{ marginBottom: 0 }}>
             <textarea
-              placeholder="أي ملاحظات خاصة بالأوردر..." value={form.notes}
+              placeholder="أي ملاحظات خاصة بالطلب..." value={form.notes}
               onChange={(e) => setForm({ ...form, notes: e.target.value })}
             />
           </div>
@@ -358,7 +358,7 @@ export default function AddOrderPage() {
       <div style={{ marginTop: 20, display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
         <button className="btn btn-secondary" onClick={() => navigate('/orders')}>إلغاء</button>
         <button className="btn btn-primary btn-lg" onClick={save} disabled={submitting}>
-          {submitting ? 'جارٍ الحفظ…' : editMode ? 'حفظ التعديلات' : 'إنشاء الأوردر'}
+          {submitting ? 'جارٍ الحفظ…' : editMode ? 'حفظ التعديلات' : 'إنشاء الطلب'}
         </button>
       </div>
     </div>

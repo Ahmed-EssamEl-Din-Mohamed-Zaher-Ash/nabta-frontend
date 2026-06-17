@@ -69,7 +69,7 @@ export default function PublicTrackPage() {
       <div style={{ textAlign: 'center', marginBottom: 16 }}>
         <img src="/logo.png" alt="نبتة" style={{ height: 40 }} />
         <h2 style={{ fontWeight: 800 }}>تتبع طلبك</h2>
-        {info?.orderNumber && <p className="text-muted">الأوردر: {info.orderNumber}</p>}
+        {info?.orderNumber && <p className="text-muted">الطلب: {info.orderNumber}</p>}
       </div>
 
       {error ? (

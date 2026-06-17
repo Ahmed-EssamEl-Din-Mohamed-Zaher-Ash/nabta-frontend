@@ -8,19 +8,19 @@ import { initReactI18next } from 'react-i18next';
 const resources = {
   ar: {
     translation: {
-      brand: { name: 'نبتة', subtitle: 'إدارة الأوردرات' },
+      brand: { name: 'نبتة', subtitle: 'إدارة الطلبات' },
       logout: 'تسجيل الخروج',
       user: 'المستخدم',
       switchLang: 'English',
       common: { add: 'إضافة', edit: 'تعديل', delete: 'حذف', save: 'حفظ', cancel: 'إلغاء', view: 'عرض', export: 'تصدير', actions: 'إجراءات', search: 'بحث', loading: 'جارٍ التحميل…', noData: 'لا توجد بيانات' },
       nav: {
-        dashboard: 'الرئيسية', orders: 'الأوردرات', 'add-order': 'إضافة أوردر', products: 'المنتجات',
+        dashboard: 'الرئيسية', orders: 'الطلبات', 'add-order': 'إضافة طلب', products: 'المنتجات',
         offers: 'العروض والخصومات', vendors: 'الموردون', customers: 'العملاء', drivers: 'السائقون',
         vehicles: 'المركبات', routes: 'المسارات', 'tracking-map': 'خريطة التتبع', 'driver-tracking': 'تتبع السائق الحي',
         analytics: 'التحليلات', finance: 'القسم المالي', 'cycle-audit': 'مراجعة الدورة', users: 'المستخدمين / الصلاحيات',
       },
       sections: { 'رئيسي': 'رئيسي', 'بيانات': 'بيانات', 'لوجستيات': 'لوجستيات', 'تقارير': 'تقارير', 'الإدارة': 'الإدارة' },
-      roles: { admin: 'مدير النظام', sales: 'مهندس مبيعات', account: 'أكاونت مانجر', ops: 'عمليات وتوصيل', finance: 'محاسبة', driver: 'سائق' },
+      roles: { admin: 'مدير النظام', sales: 'مهندس مبيعات', account: 'مدير الحسابات', ops: 'عمليات وتوصيل', finance: 'محاسبة', driver: 'سائق' },
       status: { new: 'جديد', confirmed: 'مؤكد', preparing: 'جاري التحضير', ready: 'جاهز للتوصيل', out: 'في الطريق', delivered: 'تم التسليم', failed: 'فشل التسليم', paid: 'تم الدفع للمورد' },
       lang: { ar: 'العربية', en: 'الإنجليزية' },
     },

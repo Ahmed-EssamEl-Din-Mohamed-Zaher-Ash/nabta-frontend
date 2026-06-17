@@ -105,7 +105,7 @@ export default function CycleAuditPage() {
 
   const exportButtons = [
     { kind: 'sales', icon: 'fa-briefcase', label: 'تصدير المبيعات', chip: 'شيتان', chipBg: 'var(--blue-light)', chipColor: 'var(--blue)' },
-    { kind: 'account', icon: 'fa-box', label: 'تصدير الأكاونت', chip: 'شيتان', chipBg: 'var(--yellow-light)', chipColor: '#92400E' },
+    { kind: 'account', icon: 'fa-box', label: 'تصدير الحسابات', chip: 'شيتان', chipBg: 'var(--yellow-light)', chipColor: '#92400E' },
     { kind: 'ops', icon: 'fa-truck', label: 'تصدير التوصيل', chip: 'شيتان', chipBg: 'var(--orange-light)', chipColor: '#9A3412' },
     { kind: 'finance', icon: 'fa-coins', label: 'تصدير المحاسبة', chip: '3 شيتات', chipBg: 'var(--green-100)', chipColor: 'var(--green-700)' },
   ];
@@ -115,9 +115,9 @@ export default function CycleAuditPage() {
       {/* Pipeline overview */}
       <div className="card" style={{ marginBottom: 20 }}>
         <div className="card-header">
-          <h3><i className="fa-solid fa-rotate" aria-hidden="true" /> خط أنابيب الأوردرات — Pipeline View</h3>
+          <h3><i className="fa-solid fa-rotate" aria-hidden="true" /> خط أنابيب الطلبات — Pipeline View</h3>
           <div style={{ display: 'flex', gap: 8 }}>
-            <button className="btn btn-secondary btn-sm" onClick={() => navigate('/orders')}>← الأوردرات</button>
+            <button className="btn btn-secondary btn-sm" onClick={() => navigate('/orders')}>← الطلبات</button>
             <button className="btn btn-primary btn-sm" onClick={() => runExport('master')}>
               <i className="fa-solid fa-download" aria-hidden="true" /> تصدير الملف الشامل
             </button>
@@ -150,11 +150,11 @@ export default function CycleAuditPage() {
           </div>
           {counts.failed > 0 ? (
             <div style={{ marginTop: 12, background: 'var(--red-light)', color: 'var(--red)', padding: '8px 14px', borderRadius: 8, fontSize: 13, fontWeight: 600 }}>
-              <i className="fa-solid fa-triangle-exclamation" aria-hidden="true" /> {counts.failed} أوردر بحالة فشل التسليم — يتطلب مراجعة
+              <i className="fa-solid fa-triangle-exclamation" aria-hidden="true" /> {counts.failed} طلب بحالة فشل التسليم — يتطلب مراجعة
             </div>
           ) : (
             <div style={{ marginTop: 12, background: 'var(--green-100)', color: 'var(--green-700)', padding: '8px 14px', borderRadius: 8, fontSize: 13, fontWeight: 600 }}>
-              <i className="fa-solid fa-check" aria-hidden="true" /> لا توجد أوردرات فاشلة
+              <i className="fa-solid fa-check" aria-hidden="true" /> لا توجد طلبات فاشلة
             </div>
           )}
         </div>
@@ -206,12 +206,12 @@ export default function CycleAuditPage() {
 
       {/* Order journey table */}
       <div className="card">
-        <div className="card-header"><h3>رحلة الأوردرات (آخر 50)</h3></div>
+        <div className="card-header"><h3>رحلة الطلبات (آخر 50)</h3></div>
         <div className="table-wrapper">
           <table>
             <thead>
               <tr>
-                <th>رقم الأوردر</th><th>التاريخ</th><th>العميل</th><th>المورد</th><th>السائق</th>
+                <th>رقم الطلب</th><th>التاريخ</th><th>العميل</th><th>المورد</th><th>السائق</th>
                 <th>الحالة</th><th>الرحلة</th><th>الإجمالي</th><th>تاريخ التأكيد</th><th>تاريخ التسليم</th>
               </tr>
             </thead>
