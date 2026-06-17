@@ -1,20 +1,18 @@
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext.jsx';
-import { NAV_ITEMS, ROLE_PAGES, ROLE_LABELS } from '../constants/permissions.js';
+import { NAV_ITEMS, ROLE_PAGES } from '../constants/permissions.js';
 import NavIcon from './NavIcon.jsx';
-
-function formatHeaderDate() {
-  return new Date().toLocaleDateString('ar-AE', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
-}
 
 export default function AppShell() {
   const { user, role, logout } = useAuth();
   const location = useLocation();
+  const { t, i18n } = useTranslation();
+
+  const headerDate = new Date().toLocaleDateString(i18n.language === 'ar' ? 'ar-AE' : 'en-US', {
+    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+  });
+  const toggleLang = () => i18n.changeLanguage(i18n.language === 'ar' ? 'en' : 'ar');
 
   // Pages this role may see, in legacy NAV_ITEMS order, grouped by section.
   const allowedPages = ROLE_PAGES[role] ?? [];
@@ -30,7 +28,7 @@ export default function AppShell() {
   }
 
   const activePage = location.pathname.replace(/^\//, '') || 'dashboard';
-  const pageTitle = NAV_ITEMS[activePage]?.label ?? 'الرئيسية';
+  const pageTitle = t(`nav.${activePage}`, { defaultValue: NAV_ITEMS[activePage]?.label || '' });
 
   return (
     <div id="app">
@@ -38,15 +36,15 @@ export default function AppShell() {
         <div className="sidebar-logo">
           <img src="/logo.png" alt="نبتة" className="brand-logo" />
           <div className="sidebar-logo-text">
-            <h2>نبتة</h2>
-            <p>إدارة الأوردرات</p>
+            <h2>{t('brand.name')}</h2>
+            <p>{t('brand.subtitle')}</p>
           </div>
         </div>
 
         <div id="sidebar-nav" className="sidebar-nav">
           {sections.map((section) => (
             <div key={section.title}>
-              <div className="nav-section-title">{section.title}</div>
+              <div className="nav-section-title">{t(`sections.${section.title}`, section.title)}</div>
               {section.pages.map(({ page, label, icon }) => (
                 <NavLink
                   key={page}
@@ -55,7 +53,7 @@ export default function AppShell() {
                   id={`nav-${page}`}
                 >
                   <NavIcon name={icon} />
-                  <span>{label}</span>
+                  <span>{t(`nav.${page}`, label)}</span>
                 </NavLink>
               ))}
             </div>
@@ -68,12 +66,12 @@ export default function AppShell() {
               {(user?.name || 'م').charAt(0)}
             </div>
             <div className="sidebar-user-info">
-              <h4 id="user-name">{user?.name || 'المستخدم'}</h4>
-              <p id="user-role-label">{ROLE_LABELS[role] || role}</p>
+              <h4 id="user-name">{user?.name || t('user')}</h4>
+              <p id="user-role-label">{t(`roles.${role}`, role)}</p>
             </div>
           </div>
           <button type="button" className="btn-logout" onClick={logout}>
-            تسجيل الخروج
+            {t('logout')}
           </button>
         </div>
       </nav>
@@ -82,11 +80,14 @@ export default function AppShell() {
         <header id="header">
           <h2 id="page-title">{pageTitle}</h2>
           <div className="header-actions">
+            <button type="button" className="header-badge" onClick={toggleLang} style={{ cursor: 'pointer', border: 'none' }} title="Language / اللغة">
+              <i className="fa-solid fa-language" aria-hidden="true" /> {t('switchLang')}
+            </button>
             <span id="header-role-badge" className="header-badge">
-              {ROLE_LABELS[role] || role}
+              {t(`roles.${role}`, role)}
             </span>
             <span id="header-date" className="text-muted header-date">
-              {formatHeaderDate()}
+              {headerDate}
             </span>
           </div>
         </header>

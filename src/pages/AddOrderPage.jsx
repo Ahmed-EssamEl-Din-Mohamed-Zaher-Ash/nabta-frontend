@@ -4,6 +4,7 @@ import api, { apiErrorMessage } from '../api/client.js';
 import { useToast } from '../components/ToastHost.jsx';
 import MapPickerModal from '../components/MapPickerModal.jsx';
 import { formatCurrency } from '../utils/format.js';
+import { PAYMENT_METHODS } from '../constants/payments.js';
 
 let rowKey = 0;
 const newRow = () => ({ key: ++rowKey, productId: '', qty: 1 });
@@ -21,10 +22,10 @@ export default function AddOrderPage() {
   const [pickingLocation, setPickingLocation] = useState(false);
   const [form, setForm] = useState({
     customerId: '',
-    vendorId: '',
     deliveryAddress: '',
     taxRate: 5,
     deliveryFee: 0,
+    paymentMethod: 'cod',
     notes: '',
   });
   const [submitting, setSubmitting] = useState(false);
@@ -44,10 +45,10 @@ export default function AddOrderPage() {
           const o = data.order;
           setForm({
             customerId: o.customerId,
-            vendorId: o.vendorId,
             deliveryAddress: o.deliveryAddress || '',
             taxRate: o.taxRate ?? 5,
             deliveryFee: o.deliveryFee || 0,
+            paymentMethod: o.paymentMethod || 'cod',
             notes: o.notes || '',
           });
           if (o.location?.lat) setLocation(o.location);
@@ -75,13 +76,29 @@ export default function AddOrderPage() {
   const tax = (subtotal * (Number(form.taxRate) || 0)) / 100;
   const grand = subtotal + tax + (Number(form.deliveryFee) || 0);
 
+  // Auto-split preview: group the chosen products by their vendor.
+  const vendorGroups = useMemo(() => {
+    const map = new Map();
+    rows.forEach((r) => {
+      const prod = productById.get(r.productId);
+      if (!prod) return;
+      const vId = prod.vendorId || prod.vendor?.id || 'unknown';
+      const vName = prod.vendor?.nameAr || prod.vendor?.name || 'غير محدد';
+      const line = prod.price * (Number(r.qty) || 0);
+      if (!map.has(vId)) map.set(vId, { name: vName, items: 0, subtotal: 0 });
+      const g = map.get(vId);
+      g.items += 1;
+      g.subtotal += line;
+    });
+    return Array.from(map.values());
+  }, [rows, productById]);
+
   function setRow(key, patch) {
     setRows((rs) => rs.map((r) => (r.key === key ? { ...r, ...patch } : r)));
   }
 
   async function save() {
     if (!form.customerId) return showToast('اختر العميل', 'error');
-    if (!form.vendorId) return showToast('اختر المورد', 'error');
     if (!form.deliveryAddress.trim()) return showToast('أدخل عنوان التوصيل', 'error');
 
     const products = rows
@@ -94,11 +111,11 @@ export default function AddOrderPage() {
         // Backend updateOrder only updates scalar fields (items are immutable after creation).
         await api.put(`/api/orders/${editId}`, {
           customerId: form.customerId,
-          vendorId: form.vendorId,
           deliveryAddress: form.deliveryAddress.trim(),
           location,
           taxRate: Number(form.taxRate) || 5,
           deliveryFee: Number(form.deliveryFee) || 0,
+          paymentMethod: form.paymentMethod,
           notes: form.notes,
         });
         showToast('تم تعديل الأوردر', 'success');
@@ -110,12 +127,12 @@ export default function AddOrderPage() {
         }
         const { data } = await api.post('/api/orders', {
           customerId: form.customerId,
-          vendorId: form.vendorId,
           products,
           deliveryAddress: form.deliveryAddress.trim(),
           location,
           deliveryFee: Number(form.deliveryFee) || 0,
           taxRate: Number(form.taxRate) || 5,
+          paymentMethod: form.paymentMethod,
           notes: form.notes,
         });
         showToast(`تم إنشاء الأوردر ${data.order.orderNumber}`, 'success');
@@ -140,7 +157,7 @@ export default function AddOrderPage() {
       </div>
 
       <div className="card">
-        <div className="card-header"><h3>بيانات العميل والمورد</h3></div>
+        <div className="card-header"><h3>بيانات العميل والدفع</h3></div>
         <div className="card-body">
           <div className="form-row">
             <div className="form-group">
@@ -151,10 +168,9 @@ export default function AddOrderPage() {
               </select>
             </div>
             <div className="form-group">
-              <label>المورد <span className="required-star">*</span></label>
-              <select value={form.vendorId} onChange={(e) => setForm({ ...form, vendorId: e.target.value })}>
-                <option value="">-- اختر مورد --</option>
-                {lists.vendors.map((v) => <option key={v.id} value={v.id}>{v.nameAr || v.name}</option>)}
+              <label>طريقة الدفع <span className="required-star">*</span></label>
+              <select value={form.paymentMethod} onChange={(e) => setForm({ ...form, paymentMethod: e.target.value })}>
+                {PAYMENT_METHODS.map((pm) => <option key={pm.value} value={pm.value}>{pm.label}</option>)}
               </select>
             </div>
           </div>
@@ -240,26 +256,40 @@ export default function AddOrderPage() {
             </p>
           ) : (
             <>
+              <p className="text-muted" style={{ fontSize: 12, marginBottom: 8 }}>
+                يتم تحديد المورد تلقائياً حسب كل منتج، ويُقسَّم الأوردر على الموردين عند الحاجة.
+              </p>
               <div className="order-products-list">
                 <div
                   className="order-product-row"
                   style={{ background: 'var(--gray-50)', fontSize: 12, fontWeight: 700, color: 'var(--gray-600)' }}
                 >
-                  <span>المنتج</span><span>الكمية</span><span>السعر</span><span>الإجمالي</span><span></span>
+                  <span>المنتج / المورد</span><span>الكمية</span><span>السعر</span><span>الإجمالي</span><span></span>
                 </div>
                 {rows.map((r) => {
                   const prod = productById.get(r.productId);
                   const price = prod?.price || 0;
                   return (
                     <div className="order-product-row" key={r.key}>
-                      <select value={r.productId} onChange={(e) => setRow(r.key, { productId: e.target.value })}>
-                        <option value="">-- اختر منتج --</option>
-                        {lists.products.map((p) => (
-                          <option key={p.id} value={p.id}>
-                            {p.nameAr || p.name} {p.stock !== undefined ? `(متوفر: ${p.stock})` : ''}
-                          </option>
-                        ))}
-                      </select>
+                      <div>
+                        <select
+                          style={{ width: '100%' }}
+                          value={r.productId}
+                          onChange={(e) => setRow(r.key, { productId: e.target.value })}
+                        >
+                          <option value="">-- اختر منتج --</option>
+                          {lists.products.map((p) => (
+                            <option key={p.id} value={p.id}>
+                              {p.nameAr || p.name} {p.stock !== undefined ? `(متوفر: ${p.stock})` : ''}
+                            </option>
+                          ))}
+                        </select>
+                        {prod?.vendor && (
+                          <div style={{ fontSize: 11, color: 'var(--gray-500)', marginTop: 3 }}>
+                            <i className="fa-solid fa-store" aria-hidden="true" /> {prod.vendor.nameAr || prod.vendor.name}
+                          </div>
+                        )}
+                      </div>
                       <input
                         type="number" min="1" value={r.qty}
                         onChange={(e) => setRow(r.key, { qty: e.target.value })}
@@ -285,6 +315,22 @@ export default function AddOrderPage() {
               >
                 + إضافة منتج آخر
               </button>
+
+              {vendorGroups.length > 1 && (
+                <div className="card" style={{ marginTop: 14, background: 'var(--gray-50)' }}>
+                  <div className="card-body" style={{ padding: 12 }}>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--gray-600)', marginBottom: 6 }}>
+                      <i className="fa-solid fa-code-branch" aria-hidden="true" /> تقسيم الأوردر حسب المورد ({vendorGroups.length} موردين)
+                    </div>
+                    {vendorGroups.map((g, i) => (
+                      <div key={i} className="total-row" style={{ fontSize: 13 }}>
+                        <span><i className="fa-solid fa-store" aria-hidden="true" /> {g.name} <span className="text-muted">({g.items} صنف)</span></span>
+                        <span>{formatCurrency(g.subtotal)}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </>
           )}
 

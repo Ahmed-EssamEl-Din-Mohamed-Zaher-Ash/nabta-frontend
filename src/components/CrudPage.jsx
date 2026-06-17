@@ -100,6 +100,7 @@ export default function CrudPage({
   async function save() {
     const isCreate = !editing.item;
     for (const f of fields) {
+      if (f.showIf && !f.showIf(values)) continue; // hidden fields aren't required
       const required = f.required || (isCreate && f.requiredOnCreate);
       if (required && f.type !== 'location' && !String(values[f.name] ?? '').trim()) {
         showToast('يرجى ملء الحقول المطلوبة', 'error');
@@ -138,6 +139,8 @@ export default function CrudPage({
   }
 
   function renderField(f) {
+    // Conditional fields (e.g. driver link shown only for the driver role).
+    if (f.showIf && !f.showIf(values)) return null;
     const common = {
       value: values[f.name] ?? '',
       onChange: (e) => setValues((v) => ({ ...v, [f.name]: e.target.value })),
@@ -173,11 +176,12 @@ export default function CrudPage({
         ) : f.type === 'select' ? (
           <select {...common}>
             <option value="">{f.placeholder || '-- اختر --'}</option>
-            {(f.options || (lookupData[f.lookup] || []).map((it) => ({ value: it.id, label: f.optionLabel(it) }))).map(
-              (o) => (
-                <option key={o.value} value={o.value}>{o.label}</option>
-              )
-            )}
+            {(typeof f.options === 'function'
+              ? f.options(values, lookupData)
+              : (f.options || (lookupData[f.lookup] || []).map((it) => ({ value: it.id, label: f.optionLabel(it) })))
+            ).map((o) => (
+              <option key={o.value} value={o.value}>{o.label}</option>
+            ))}
           </select>
         ) : (
           <input

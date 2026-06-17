@@ -49,11 +49,11 @@ export const REPORT_ROLES = ['admin', 'finance', 'sales', 'account'];
 
 // Which pages each role can open (drives both the sidebar and route guards).
 export const ROLE_PAGES = {
-  admin: ['dashboard', 'orders', 'add-order', 'products', 'vendors', 'customers', 'drivers', 'vehicles', 'routes', 'tracking-map', 'analytics', 'cycle-audit', 'users'],
-  sales: ['dashboard', 'orders', 'add-order', 'products', 'customers'],
+  admin: ['dashboard', 'orders', 'add-order', 'products', 'vendors', 'customers', 'drivers', 'vehicles', 'routes', 'tracking-map', 'analytics', 'cycle-audit', 'finance', 'offers', 'users'],
+  sales: ['dashboard', 'orders', 'add-order', 'products', 'customers', 'offers'],
   account: ['dashboard', 'orders', 'vendors'],
   ops: ['dashboard', 'orders', 'drivers', 'vehicles', 'routes', 'tracking-map'],
-  finance: ['dashboard', 'orders', 'vendors'],
+  finance: ['dashboard', 'orders', 'vendors', 'finance'],
   driver: ['dashboard', 'orders', 'driver-tracking'],
 };
 
@@ -63,6 +63,7 @@ export const NAV_ITEMS = {
   orders: { label: 'الأوردرات', icon: 'orders', section: 'رئيسي' },
   'add-order': { label: 'إضافة أوردر', icon: 'plus', section: 'رئيسي' },
   products: { label: 'المنتجات', icon: 'products', section: 'بيانات' },
+  offers: { label: 'العروض والخصومات', icon: 'products', section: 'بيانات' },
   vendors: { label: 'الموردون', icon: 'vendor', section: 'بيانات' },
   customers: { label: 'العملاء', icon: 'customers', section: 'بيانات' },
   drivers: { label: 'السائقون', icon: 'driver', section: 'لوجستيات' },
@@ -71,6 +72,7 @@ export const NAV_ITEMS = {
   'tracking-map': { label: 'خريطة التتبع', icon: 'map', section: 'لوجستيات' },
   'driver-tracking': { label: 'تتبع السائق الحي', icon: 'vehicle', section: 'لوجستيات' },
   analytics: { label: 'التحليلات', icon: 'chart', section: 'تقارير' },
+  finance: { label: 'القسم المالي', icon: 'chart', section: 'تقارير' },
   'cycle-audit': { label: 'مراجعة الدورة', icon: 'rotate', section: 'تقارير' },
   users: { label: 'المستخدمين / الصلاحيات', icon: 'customers', section: 'الإدارة' },
 };

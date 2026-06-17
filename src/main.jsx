@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router-dom';
 import App from './App.jsx';
 import { AuthProvider } from './context/AuthContext.jsx';
 import { ToastProvider } from './components/ToastHost.jsx';
+import './i18n/index.js';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import './styles/index.css';
 

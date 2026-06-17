@@ -20,6 +20,8 @@ const DriverTrackingPage = lazy(() => import('./pages/DriverTrackingPage.jsx'));
 const AnalyticsPage = lazy(() => import('./pages/AnalyticsPage.jsx'));
 const PublicTrackPage = lazy(() => import('./pages/PublicTrackPage.jsx'));
 const CycleAuditPage = lazy(() => import('./pages/CycleAuditPage.jsx'));
+const FinancePage = lazy(() => import('./pages/FinancePage.jsx'));
+const OffersPage = lazy(() => import('./pages/OffersPage.jsx'));
 
 const lazyFallback = <div className="loading"><div className="spinner" /></div>;
 
@@ -38,6 +40,8 @@ const PAGE_ELEMENTS = {
   'driver-tracking': <DriverTrackingPage />,
   analytics: <AnalyticsPage />,
   'cycle-audit': <CycleAuditPage />,
+  finance: <FinancePage />,
+  offers: <OffersPage />,
   users: <UsersPage />,
 };
 

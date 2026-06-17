@@ -38,7 +38,15 @@ export default function CustomersPage() {
       fields={[
         { name: 'name', label: 'الاسم', required: true, half: true },
         { name: 'phone', label: 'الهاتف', half: true, placeholder: '+971501234567' },
-        { name: 'email', label: 'البريد الإلكتروني', type: 'email' },
+        { name: 'email', label: 'البريد الإلكتروني', type: 'email', half: true },
+        {
+          name: 'preferredLanguage',
+          label: 'لغة المراسلة والفواتير',
+          type: 'select',
+          half: true,
+          default: 'ar',
+          options: [{ value: 'ar', label: 'العربية' }, { value: 'en', label: 'الإنجليزية' }],
+        },
         { name: 'address', label: 'العنوان' },
         { name: 'location', label: 'الموقع على الخريطة', type: 'location' },
         { name: 'notes', label: 'ملاحظات', type: 'textarea' },
@@ -48,6 +56,7 @@ export default function CustomersPage() {
         phone: v.phone.trim(),
         email: v.email.trim(),
         address: v.address.trim(),
+        preferredLanguage: v.preferredLanguage || 'ar',
         // location is a required Json column in the schema
         location: v.location?.lat ? v.location : { lat: null, lng: null, address: v.address.trim() },
         notes: v.notes || null,

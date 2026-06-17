@@ -8,6 +8,13 @@ import { STATUS_LABELS } from '../constants/permissions.js';
 const fmtDate = (d) => (d ? String(d).slice(0, 10) : '-');
 const fmtNum = (n) => Math.round((Number(n) || 0) * 100) / 100;
 const subtotalOf = (o) => (o.items || []).reduce((s, it) => s + it.qty * it.price, 0);
+// Multi-vendor: an order may span several vendors (o.vendors[]). Fall back to
+// the legacy single vendor. (Per-vendor financial aggregation is handled by the
+// finance module, which splits at the item level.)
+const vName = (o) => {
+  const vs = o.vendors && o.vendors.length ? o.vendors : o.vendor ? [o.vendor] : [];
+  return vs.length ? vs.map((v) => v.nameAr || v.name).join('، ') : '-';
+};
 const totalOf = (o) => {
   const sub = subtotalOf(o);
   return sub + sub * ((o.taxRate ?? 5) / 100) + (o.deliveryFee || 0);
@@ -39,7 +46,7 @@ export function exportSalesExcel(orders) {
       'العميل': o.customer?.name || '-',
       'هاتف العميل': o.customer?.phone || '-',
       'عنوان التسليم': o.deliveryAddress || '-',
-      'المورد': o.vendor?.nameAr || o.vendor?.name || '-',
+      'المورد': vName(o),
       'عدد المنتجات': (o.items || []).length,
       'المجموع الجزئي': fmtNum(sub),
       'ضريبة القيمة المضافة 5%': fmtNum(tax),
@@ -62,7 +69,7 @@ export function exportSalesExcel(orders) {
         'الوحدة': it.product?.unit || '-',
         'سعر الوحدة': fmtNum(it.price),
         'إجمالي السطر': fmtNum(it.qty * it.price),
-        'المورد': o.vendor?.nameAr || o.vendor?.name || '-',
+        'المورد': vName(o),
         'حالة الأوردر': STATUS_LABELS[o.status] || o.status,
       });
     });
@@ -84,7 +91,7 @@ export function exportAccountExcel(orders, vendors) {
     'رقم الأوردر': o.orderNumber,
     'تاريخ الأوردر': fmtDate(o.date),
     'العميل': o.customer?.name || '-',
-    'المورد': o.vendor?.nameAr || o.vendor?.name || '-',
+    'المورد': vName(o),
     'هاتف المورد': o.vendor?.phone || '-',
     'بريد المورد': o.vendor?.email || '-',
     'المنتجات': (o.items || [])
@@ -185,7 +192,7 @@ export function exportFinanceExcel(orders, vendors) {
       'تاريخ الأوردر': fmtDate(o.date),
       'تاريخ التسليم': fmtDate(o.deliveredAt),
       'العميل': o.customer?.name || '-',
-      'المورد': o.vendor?.nameAr || o.vendor?.name || '-',
+      'المورد': vName(o),
       'المجموع الجزئي': fmtNum(sub),
       'ضريبة القيمة المضافة 5%': fmtNum(tax),
       'رسوم التوصيل': fmtNum(del),
@@ -265,7 +272,7 @@ export function exportMasterExcel(orders, vendors, customers, drivers) {
       'التاريخ': fmtDate(o.date),
       'العميل': o.customer?.name || '-',
       'هاتف العميل': o.customer?.phone || '-',
-      'المورد': o.vendor?.nameAr || o.vendor?.name || '-',
+      'المورد': vName(o),
       'السائق': o.driver?.name || '-',
       'عنوان التسليم': o.deliveryAddress || '-',
       'المجموع الجزئي': fmtNum(sub),
@@ -296,7 +303,7 @@ export function exportMasterExcel(orders, vendors, customers, drivers) {
         'الكمية': it.qty,
         'سعر الوحدة': fmtNum(it.price),
         'الإجمالي': fmtNum(it.qty * it.price),
-        'المورد': o.vendor?.nameAr || o.vendor?.name || '-',
+        'المورد': vName(o),
       });
     });
   });
@@ -365,6 +372,50 @@ export function exportMasterExcel(orders, vendors, customers, drivers) {
 }
 
 // ── Role router (legacy exportByRole) ───────────────────────────
+// ── Finance module workbook (overview + vendor dues + commissions) ──
+export function exportFinanceModuleExcel({ overview, dues, commissions }) {
+  const wb = XLSX.utils.book_new();
+  const s = overview?.summary || {};
+  const summaryRows = [
+    { 'البند': 'إجمالي المبيعات', 'القيمة': fmtNum(s.totalSales) },
+    { 'البند': 'المُحصّل من العملاء', 'القيمة': fmtNum(s.totalCollected) },
+    { 'البند': 'معلّق التحصيل', 'القيمة': fmtNum(s.totalPendingCollection) },
+    { 'البند': 'عمولة نبتة (الربح)', 'القيمة': fmtNum(s.totalCommission) },
+    { 'البند': 'مستحقات الموردين (صافي)', 'القيمة': fmtNum(s.totalVendorNetPayable) },
+    { 'البند': 'المدفوع للموردين', 'القيمة': fmtNum(s.totalVendorPaid) },
+    { 'البند': 'رصيد مستحق للموردين', 'القيمة': fmtNum(s.totalVendorBalance) },
+  ];
+  const ws1 = XLSX.utils.json_to_sheet(summaryRows);
+  setColWidths(ws1, [30, 18]);
+  addSheet(wb, ws1, 'الملخص');
+
+  const dueRows = (dues || []).map((v) => ({
+    'المورد': v.nameAr || v.name,
+    'إجمالي البضاعة': fmtNum(v.gross),
+    'العمولة': fmtNum(v.commission),
+    'الصافي المستحق': fmtNum(v.netPayable),
+    'المدفوع': fmtNum(v.paid),
+    'الرصيد': fmtNum(v.balance),
+    'شروط الدفع (يوم)': v.payoutTerms,
+  }));
+  const ws2 = XLSX.utils.json_to_sheet(dueRows.length ? dueRows : [{}]);
+  setColWidths(ws2, [24, 16, 14, 16, 12, 12, 16]);
+  addSheet(wb, ws2, 'مستحقات الموردين');
+
+  const comRows = (commissions?.orders || []).map((o) => ({
+    'رقم الأوردر': o.orderNumber,
+    'التاريخ': o.date,
+    'العميل': o.customer,
+    'قيمة البضاعة': fmtNum(o.gross),
+    'عمولة نبتة': fmtNum(o.commission),
+  }));
+  const ws3 = XLSX.utils.json_to_sheet(comRows.length ? comRows : [{}]);
+  setColWidths(ws3, [18, 12, 20, 16, 14]);
+  addSheet(wb, ws3, 'العمولات');
+
+  downloadWb(wb, `nabta-finance-${today()}.xlsx`);
+}
+
 export function exportByRole(role, { orders, vendors = [], customers = [], drivers = [] }) {
   if (role === 'sales') exportSalesExcel(orders);
   else if (role === 'account') exportAccountExcel(orders, vendors);
@@ -381,7 +432,7 @@ export function exportAnalyticsExcel(orders, vendors, products) {
       'رقم الأوردر': o.orderNumber,
       'التاريخ': fmtDate(o.date),
       'العميل': o.customer?.name || '-',
-      'المورد': o.vendor?.nameAr || o.vendor?.name || '-',
+      'المورد': vName(o),
       'السائق': o.driver?.name || '-',
       'الحالة': STATUS_LABELS[o.status] || o.status,
       'المجموع الجزئي': fmtNum(sub),

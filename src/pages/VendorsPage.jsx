@@ -18,7 +18,7 @@ export default function VendorsPage() {
         confirmTitle: 'حذف المورد',
         confirmText: 'هل تريد حذف هذا المورد؟',
       }}
-      editRoles={['admin']}
+      editRoles={['admin', 'account']}
       deleteRoles={['admin']}
       columns={[
         {
@@ -67,6 +67,22 @@ export default function VendorsPage() {
           default: 7,
           hint: '0 = دفع فوري | 7 = بعد 7 أيام | 30 = بعد 30 يوم',
         },
+        {
+          name: 'commissionRate',
+          label: 'نسبة عمولة نبتة (%)',
+          type: 'number',
+          half: true,
+          step: '0.1',
+          hint: 'اتركه فارغاً لاستخدام النسبة الافتراضية',
+        },
+        {
+          name: 'preferredLanguage',
+          label: 'لغة المراسلة',
+          type: 'select',
+          half: true,
+          default: 'ar',
+          options: [{ value: 'ar', label: 'العربية' }, { value: 'en', label: 'الإنجليزية' }],
+        },
         { name: 'notes', label: 'ملاحظات', type: 'textarea' },
       ]}
       toPayload={(v) => ({
@@ -80,6 +96,8 @@ export default function VendorsPage() {
         accountNumber: v.accountNumber.trim(),
         accountHolder: v.accountHolder.trim(),
         payoutTerms: parseInt(v.payoutTerms, 10) || 0,
+        preferredLanguage: v.preferredLanguage || 'ar',
+        ...(v.commissionRate !== '' && v.commissionRate != null ? { commissionRate: Number(v.commissionRate) } : {}),
         notes: v.notes || null,
       })}
       viewModal={(v) => (

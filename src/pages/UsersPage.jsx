@@ -23,6 +23,7 @@ export default function UsersPage() {
       }}
       editRoles={['admin']}
       deleteRoles={['admin']}
+      lookups={{ 'available-drivers': 'available-drivers' }}
       columns={[
         { header: 'الاسم', render: (u) => <strong>{u.name}</strong> },
         { header: 'البريد الإلكتروني', render: (u) => <span dir="ltr">{u.email}</span> },
@@ -71,12 +72,28 @@ export default function UsersPage() {
           ],
           fromItem: (u) => (u.active ? 'true' : 'false'),
         },
+        {
+          name: 'driverId',
+          label: 'السائق المرتبط بالحساب',
+          type: 'select',
+          required: true,
+          showIf: (v) => v.role === 'driver',
+          placeholder: '— اختر السائق —',
+          hint: 'إلزامي لحسابات السائقين — تظهر فقط السجلات النشطة غير المرتبطة بحساب آخر',
+          fromItem: (u) => u.driverId || '',
+          options: (values, lookupData) =>
+            (lookupData['available-drivers'] || [])
+              .filter((d) => !d.linkedProfileId || d.id === values.driverId)
+              .map((d) => ({ value: d.id, label: `${d.name} — ${d.phone || '—'}` })),
+        },
       ]}
       toPayload={(v) => ({
         name: v.name.trim(),
         email: v.email.trim(),
         role: v.role,
         active: v.active === 'true',
+        // driver accounts must carry a driver link; other roles never do
+        driverId: v.role === 'driver' ? (v.driverId || null) : null,
         // omit the key entirely when blank → backend keeps the old hash
         ...(v.password ? { password: v.password } : {}),
       })}

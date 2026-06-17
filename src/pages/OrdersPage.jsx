@@ -9,6 +9,14 @@ import StatusBadge from '../components/StatusBadge.jsx';
 import RoleGate from '../components/RoleGate.jsx';
 import OrderDetailsModal from '../components/OrderDetailsModal.jsx';
 
+// Multi-vendor: an order may span several vendors. Show the first + a "+N" badge.
+function vendorLabel(o) {
+  const vs = o.vendors && o.vendors.length ? o.vendors : o.vendor ? [o.vendor] : [];
+  if (!vs.length) return '-';
+  const first = vs[0].nameAr || vs[0].name;
+  return vs.length > 1 ? `${first} +${vs.length - 1}` : first;
+}
+
 export default function OrdersPage() {
   const { role } = useAuth();
   const showToast = useToast();
@@ -71,16 +79,16 @@ export default function OrdersPage() {
     try {
       // xlsx is heavy — load it only when someone actually exports
       const { exportByRole } = await import('../utils/excel.js');
-      const [v, c, d] = await Promise.all([
-        api.get('/api/vendors'),
-        api.get('/api/customers'),
-        api.get('/api/drivers'),
-      ]);
+      // /api/drivers is ops/admin-only now; only the ops export needs it.
+      const needsDrivers = ['ops', 'admin'].includes(role);
+      const reqs = [api.get('/api/vendors'), api.get('/api/customers')];
+      if (needsDrivers) reqs.push(api.get('/api/drivers'));
+      const [v, c, d] = await Promise.all(reqs);
       exportByRole(role, {
         orders,
         vendors: v.data.vendors,
         customers: c.data.customers,
-        drivers: d.data.drivers,
+        drivers: needsDrivers ? d.data.drivers : [],
       });
       showToast('تم تصدير الملف بنجاح', 'success');
     } catch (err) {
@@ -146,7 +154,7 @@ export default function OrdersPage() {
                   <tr key={o.id}>
                     <td><strong>{o.orderNumber}</strong></td>
                     <td>{o.customer?.name || '-'}</td>
-                    <td>{o.vendor?.nameAr || o.vendor?.name || '-'}</td>
+                    <td>{vendorLabel(o)}</td>
                     <td><StatusBadge status={o.status} /></td>
                     <td>{formatCurrency(orderTotals(o).total)}</td>
                     <td>{o.date}</td>
