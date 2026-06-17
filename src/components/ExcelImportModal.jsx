@@ -4,23 +4,49 @@ import Modal from './Modal.jsx';
 import { useToast } from './ToastHost.jsx';
 
 /**
- * Products Excel import — React port of the legacy excel-modal.
- * Flexible column matching (Arabic/English headers), 5-row preview,
- * then POSTs each row to /api/products. Rows without a resolvable vendor
- * are skipped (vendorId is required by the schema) and reported.
+ * Generic Excel bulk-import modal (used by Products & Vendors).
+ *
+ * Reads a workbook into JSON rows, previews the first 5, then maps every row and
+ * POSTs the whole array in ONE request to `bulkEndpoint`. The backend validates,
+ * de-duplicates and inserts via createMany, returning { created, skipped, errors }.
+ *
+ * The mapper/template are passed by NAME and resolved with a dynamic import of
+ * utils/excel.js, so the heavy `xlsx` dependency stays out of the main bundle.
+ *
+ * Props:
+ * - title         modal title
+ * - bulkEndpoint  e.g. '/api/products/bulk'
+ * - mapperName    export in utils/excel.js, e.g. 'mapExcelRowToProduct' — (row, vendors) => obj | null
+ * - templateName  export in utils/excel.js, e.g. 'downloadProductsTemplate'
+ * - needsVendors  when true, fetches /api/vendors so the mapper can resolve a
+ *                 vendor name → vendorId (products only)
+ * - columnsHint   short help text listing supported columns
+ * - itemNoun      Arabic noun for the toast, e.g. 'منتج' / 'مورد'
+ * - onClose / onImported
  */
-export default function ExcelImportModal({ onClose, onImported }) {
+export default function ExcelImportModal({
+  title,
+  bulkEndpoint,
+  mapperName,
+  templateName,
+  needsVendors = false,
+  columnsHint,
+  itemNoun = 'صف',
+  onClose,
+  onImported,
+}) {
   const showToast = useToast();
   const [vendors, setVendors] = useState([]);
   const [rows, setRows] = useState([]);
   const [importing, setImporting] = useState(false);
 
   useEffect(() => {
+    if (!needsVendors) return;
     api
       .get('/api/vendors')
       .then(({ data }) => setVendors(data.vendors))
       .catch((err) => showToast(apiErrorMessage(err), 'error'));
-  }, [showToast]);
+  }, [needsVendors, showToast]);
 
   async function handleFile(e) {
     const file = e.target.files[0];
@@ -36,43 +62,48 @@ export default function ExcelImportModal({ onClose, onImported }) {
   }
 
   async function downloadTemplate() {
-    const { downloadProductsTemplate } = await import('../utils/excel.js');
-    downloadProductsTemplate();
+    const mod = await import('../utils/excel.js');
+    mod[templateName]();
   }
 
   async function doImport() {
     setImporting(true);
-    const { mapExcelRowToProduct } = await import('../utils/excel.js');
-    let added = 0;
-    let skipped = 0;
-    for (const row of rows) {
-      const product = mapExcelRowToProduct(row, vendors);
-      if (!product || !product.vendorId) {
-        skipped++;
-        continue;
+    try {
+      const mod = await import('../utils/excel.js');
+      const mapRow = mod[mapperName];
+      // Vendor mapper ignores the 2nd arg; product mapper resolves it to vendorId.
+      const mapped = rows.map((r) => mapRow(r, vendors)).filter(Boolean);
+      const localSkipped = rows.length - mapped.length;
+
+      if (mapped.length === 0) {
+        showToast('لا توجد صفوف صالحة للاستيراد', 'warning');
+        return;
       }
-      try {
-        await api.post('/api/products', product);
-        added++;
-      } catch (err) {
-        skipped++;
-        console.warn('Import row failed:', apiErrorMessage(err));
-      }
+
+      // Single POST: the whole array goes to the backend in one request.
+      const { data } = await api.post(bulkEndpoint, { rows: mapped });
+      const created = data.created ?? 0;
+      const skipped = (data.skipped ?? 0) + localSkipped;
+      showToast(
+        skipped > 0
+          ? `تم استيراد ${created} ${itemNoun} (تم تخطي ${skipped} — تحقق من البيانات أو التكرار)`
+          : `تم استيراد ${created} ${itemNoun}`,
+        skipped > 0 ? 'warning' : 'success'
+      );
+      onImported();
+      onClose();
+    } catch (err) {
+      showToast(apiErrorMessage(err), 'error');
+    } finally {
+      setImporting(false);
     }
-    setImporting(false);
-    showToast(
-      skipped > 0 ? `تم استيراد ${added} منتج (تم تخطي ${skipped} — تحقق من عمود المورد)` : `تم استيراد ${added} منتج`,
-      skipped > 0 ? 'warning' : 'success'
-    );
-    onImported();
-    onClose();
   }
 
   const previewCols = rows.length ? Object.keys(rows[0]) : [];
 
   return (
     <Modal
-      title="استيراد المنتجات من Excel"
+      title={title}
       size="xl"
       onClose={onClose}
       footer={
@@ -90,9 +121,9 @@ export default function ExcelImportModal({ onClose, onImported }) {
           <i className="fa-solid fa-download" aria-hidden="true" /> تحميل القالب
         </button>
       </div>
-      <p className="text-muted" style={{ fontSize: 12, marginBottom: 10 }}>
-        الأعمدة المدعومة: اسم المنتج، الفئة، السعر، الوحدة، المخزون، المورد (يجب أن يطابق اسم مورد موجود)
-      </p>
+      {columnsHint && (
+        <p className="text-muted" style={{ fontSize: 12, marginBottom: 10 }}>{columnsHint}</p>
+      )}
 
       {rows.length > 0 && (
         <>

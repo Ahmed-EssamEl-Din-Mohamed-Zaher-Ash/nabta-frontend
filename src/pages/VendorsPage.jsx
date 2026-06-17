@@ -1,11 +1,33 @@
+import { useState } from 'react';
 import CrudPage from '../components/CrudPage.jsx';
+import ExcelImportModal from '../components/ExcelImportModal.jsx';
 
 // Account & finance can open this page read-only (عرض); only admin mutates.
 // Note: the Vendor model has no `location` field, so unlike legacy we never
 // send one (Prisma rejects unknown fields).
 export default function VendorsPage() {
+  const [importing, setImporting] = useState(null); // { refresh } when open
+
   return (
+    <>
+      {importing && (
+        <ExcelImportModal
+          title="استيراد الموردين من Excel"
+          bulkEndpoint="/api/vendors/bulk"
+          mapperName="mapExcelRowToVendor"
+          templateName="downloadVendorsTemplate"
+          itemNoun="مورد"
+          columnsHint="الأعمدة المدعومة: الاسم بالعربي، الاسم بالإنجليزي، الهاتف، البريد، العنوان، اسم البنك، IBAN، رقم الحساب، اسم صاحب الحساب، شروط الدفع (أيام)، نسبة العمولة، لغة المراسلة، ملاحظات"
+          onClose={() => setImporting(null)}
+          onImported={importing.refresh}
+        />
+      )}
     <CrudPage
+      toolbarExtra={({ refresh }) => (
+        <button className="btn btn-secondary" onClick={() => setImporting({ refresh })}>
+          <i className="fa-solid fa-file-excel" aria-hidden="true" /> استيراد Excel
+        </button>
+      )}
       entity="vendors"
       listKey="vendors"
       countLabel={(n) => `${n} مورد`}
@@ -127,5 +149,6 @@ export default function VendorsPage() {
         </>
       )}
     />
+    </>
   );
 }

@@ -11,7 +11,17 @@ export default function ProductsPage() {
   return (
     <>
       {importing && (
-        <ExcelImportModal onClose={() => setImporting(null)} onImported={importing.refresh} />
+        <ExcelImportModal
+          title="استيراد المنتجات من Excel"
+          bulkEndpoint="/api/products/bulk"
+          mapperName="mapExcelRowToProduct"
+          templateName="downloadProductsTemplate"
+          needsVendors
+          itemNoun="منتج"
+          columnsHint="الأعمدة المدعومة: اسم المنتج، الفئة، السعر، الوحدة، المخزون، المورد (يجب أن يطابق اسم مورد موجود)"
+          onClose={() => setImporting(null)}
+          onImported={importing.refresh}
+        />
       )}
     <CrudPage
       toolbarExtra={({ refresh }) => (

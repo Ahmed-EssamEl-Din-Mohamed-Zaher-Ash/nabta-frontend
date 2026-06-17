@@ -526,3 +526,97 @@ export function downloadProductsTemplate() {
   addSheet(wb, XLSX.utils.json_to_sheet(templateData), 'المنتجات');
   downloadWb(wb, 'nabta_products_template.xlsx');
 }
+
+// ── Vendors import helpers ──────────────────────────────────────
+/** Flexible column matching (Arabic or English headers), mirrors the product mapper. */
+export function mapExcelRowToVendor(row) {
+  const keys = Object.keys(row);
+  const find = (test) => keys.find(test);
+  const str = (k) => (k && row[k] != null ? String(row[k]).trim() : '');
+
+  // nameAr: prefer an explicit "عربي" header, else any "اسم" that isn't a bank/account/holder column.
+  const nameArKey =
+    find((k) => k.includes('عربي')) ||
+    find((k) => k.includes('اسم') && !k.includes('بنك') && !k.includes('حساب') && !k.includes('صاحب'));
+  const nameEnKey = find((k) => k.includes('إنجليزي') || k.includes('انجليزي') || /name/i.test(k));
+  const phoneKey = find((k) => k.includes('هاتف') || k.includes('جوال') || /phone|mobile|tel/i.test(k));
+  const emailKey = find((k) => k.includes('بريد') || /e-?mail/i.test(k));
+  const addressKey = find((k) => k.includes('عنوان') || /address/i.test(k));
+  const bankKey = find((k) => k.includes('بنك') || /bank/i.test(k));
+  const ibanKey = find((k) => k.toLowerCase().includes('iban') || k.includes('آيبان') || k.includes('ايبان'));
+  const accNumKey = find((k) => (k.includes('رقم') && k.includes('حساب')) || /account\s*(number|no)/i.test(k));
+  const accHolderKey = find((k) => k.includes('صاحب') || /holder/i.test(k));
+  const payoutKey = find((k) => k.includes('شروط') || k.includes('سداد') || /payout|terms/i.test(k));
+  const commKey = find((k) => k.includes('عمولة') || /commission/i.test(k));
+  const langKey = find((k) => k.includes('لغة') || /lang/i.test(k));
+  const notesKey = find((k) => k.includes('ملاحظ') || /note/i.test(k));
+
+  const nameAr = str(nameArKey);
+  const nameEn = str(nameEnKey);
+  const primary = nameAr || nameEn;
+  if (!primary) return null; // a row with no name at all is unusable
+
+  const rawLang = str(langKey).toLowerCase();
+  const preferredLanguage =
+    rawLang.includes('en') || rawLang.includes('إنجليز') || rawLang.includes('انجليز') ? 'en' : 'ar';
+
+  const out = {
+    nameAr: primary,
+    name: nameEn || primary,
+    phone: str(phoneKey),
+    email: str(emailKey),
+    address: str(addressKey),
+    bankName: str(bankKey),
+    iban: str(ibanKey),
+    accountNumber: str(accNumKey),
+    accountHolder: str(accHolderKey),
+    payoutTerms: payoutKey ? parseInt(row[payoutKey], 10) || 0 : 0,
+    preferredLanguage,
+    notes: str(notesKey) || null,
+  };
+
+  // commissionRate is optional — only send it when a real number is provided.
+  if (commKey && row[commKey] !== '' && row[commKey] != null) {
+    const c = Number(row[commKey]);
+    if (!Number.isNaN(c)) out.commissionRate = c;
+  }
+  return out;
+}
+
+export function downloadVendorsTemplate() {
+  const templateData = [
+    {
+      'الاسم بالعربي': 'مثال: مزرعة الواحة',
+      'الاسم بالإنجليزي': 'Oasis Farm',
+      'الهاتف': '+971501234567',
+      'البريد الإلكتروني': 'info@oasis.ae',
+      'العنوان': 'دبي - الإمارات',
+      'اسم البنك': 'بنك الإمارات دبي الوطني',
+      'IBAN': 'AE070331234567890123456',
+      'رقم الحساب': '1234567890',
+      'اسم صاحب الحساب': 'مزرعة الواحة ش.ذ.م.م',
+      'شروط الدفع (أيام)': 7,
+      'نسبة العمولة %': 10,
+      'لغة المراسلة': 'ar',
+      'ملاحظات': '',
+    },
+    {
+      'الاسم بالعربي': 'مثال: مشاتل الخليج',
+      'الاسم بالإنجليزي': 'Gulf Nurseries',
+      'الهاتف': '+971559876543',
+      'البريد الإلكتروني': 'sales@gulf.ae',
+      'العنوان': 'أبوظبي - الإمارات',
+      'اسم البنك': 'بنك أبوظبي الأول',
+      'IBAN': 'AE070339876543210987654',
+      'رقم الحساب': '9876543210',
+      'اسم صاحب الحساب': 'مشاتل الخليج',
+      'شروط الدفع (أيام)': 0,
+      'نسبة العمولة %': '',
+      'لغة المراسلة': 'en',
+      'ملاحظات': '',
+    },
+  ];
+  const wb = XLSX.utils.book_new();
+  addSheet(wb, XLSX.utils.json_to_sheet(templateData), 'الموردون');
+  downloadWb(wb, 'nabta_vendors_template.xlsx');
+}
